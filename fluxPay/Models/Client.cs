@@ -3,8 +3,6 @@ using System.Collections.Generic;
 
 namespace FluxPay.Models;
 
-public class User
-{
     public class Client
     {
         public Guid Id { get; set; } // Unique identifier for the client in your system
@@ -50,4 +48,3 @@ public class User
         public string Data { get; set; }
         public string RegisteredTableName { get; set; }
     }
-}

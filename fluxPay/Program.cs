@@ -1,4 +1,41 @@
+using System.ComponentModel;
+using System.Text.Json;
+using System.Text.Json.Serialization;
+using fluxPay.Clients;
+using fluxPay.Interfaces.Services;
+using fluxPay.Services;
+
+
 var builder = WebApplication.CreateBuilder(args);
+
+
+builder.Services.AddHttpClient<FineractClient>();
+
+builder.Services.AddScoped<IFineractApiService, FineractApiService>();
+builder.Services.AddScoped<AuthService>();
+
+// Add services to the container.
+// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
+//builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
+
+builder.Services.AddControllers();
+    // .AddJsonOptions(options =>
+    // {
+    //     options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter(JsonNamingPolicy.CamelCase));
+    //     // Uncomment the next line if you have a custom DateTime converter
+    //     // options.JsonSerializerOptions.Converters.Add(new DateTimeConverter());
+    // })
+    // .AddNewtonsoftJson(options =>
+    // {
+    //     options.SerializerSettings.Converters.Add(new Newtonsoft.Json.Converters.StringEnumConverter { AllowIntegerValues = true });
+    //     // Uncomment the next line if you have a custom DateTime converter
+    //     // options.SerializerSettings.Converters.Add(new MultiFormatDateTimeConverter());
+    // });
+
+
+
+builder.Services.AddSingleton<IConfiguration>(builder.Configuration);
 
 // Add services to the container.
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
@@ -15,30 +52,11 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-
-var summaries = new[]
+app.UseRouting();  // Ensure routing is enabled
+app.UseEndpoints(endpoints =>
 {
-    "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
-};
+    endpoints.MapControllers();  // This is required to map your controller routes
+});
 
-app.MapGet("/weatherforecast", () =>
-{
-    var forecast =  Enumerable.Range(1, 5).Select(index =>
-        new WeatherForecast
-        (
-            DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
-            Random.Shared.Next(-20, 55),
-            summaries[Random.Shared.Next(summaries.Length)]
-        ))
-        .ToArray();
-    return forecast;
-})
-.WithName("GetWeatherForecast")
-.WithOpenApi();
 
 app.Run();
-
-record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
-{
-    public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
-}
