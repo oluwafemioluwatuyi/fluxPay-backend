@@ -1,11 +1,12 @@
 {
   "Version": 1,
-  "Hash": "93JkFJbSvG4qVdM4d5heR7hmkhARYtkAcKa8pW8iF2c=",
+  "Hash": "GuPj9om4a0MjG37rxw4VlvCzLYaqssW2EfXojpI8Vfw=",
   "Source": "fluxPay",
   "BasePath": "_content/fluxPay",
   "Mode": "Default",
   "ManifestType": "Build",
   "ReferencedProjectsConfiguration": [],
   "DiscoveryPatterns": [],
-  "Assets": []
+  "Assets": [],
+  "Endpoints": []
 }

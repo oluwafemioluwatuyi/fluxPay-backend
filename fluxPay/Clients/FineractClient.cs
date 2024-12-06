@@ -11,24 +11,49 @@ namespace fluxPay.Clients
 {
     public class FineractClient
     {
-        private readonly HttpClient _client;
+        public readonly HttpClient _client;
         private readonly IConfiguration _configuration;
+        private readonly string _tenantId;
 
-        public FineractClient(HttpClient client, IConfiguration configuration)
+        public FineractClient(HttpClient client, IConfiguration configuration, string tenantId = "default")
         {
+            _client = client;
+            _tenantId = tenantId;
             _configuration = configuration;
-             var handler = new HttpClientHandler 
-             { ServerCertificateCustomValidationCallback = (
-                message, cert, chain, errors) => true
-             }; 
-             _client = new HttpClient(handler) { BaseAddress = new Uri(_configuration["Fineract:BaseUrl"]), Timeout = TimeSpan.FromSeconds(30) };
 
-            // Add Basic Authentication Header
-            var authValue = Convert.ToBase64String(Encoding.UTF8.GetBytes($"{_configuration["Fineract:Username"]}:{_configuration["Fineract:Password"]}"));
-            _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic", authValue);
+            var handler = new HttpClientHandler
+            {
+                ServerCertificateCustomValidationCallback = (message, cert, chain, errors) => true
+            };
 
-             // Disable SSL Verification (for development purposes only)
-          //  ServicePointManager.ServerCertificateValidationCallback = new RemoteCertificateValidationCallback((sender, certificate, chain, sslPolicyErrors) => true);
+            // Recreate HttpClient with the custom handler
+            _client = new HttpClient(handler)
+            {
+                BaseAddress = new Uri(_configuration["Fineract:BaseUrl"]),
+                Timeout = TimeSpan.FromSeconds(30)
+            };
+
+            if (!_client.DefaultRequestHeaders.Contains("Authorization"))
+            {
+                var authValue = Convert.ToBase64String(Encoding.UTF8.GetBytes($"{_configuration["Fineract:Username"]}:{_configuration["Fineract:Password"]}"));
+                _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic", authValue);
+            }
+
+            if (!_client.DefaultRequestHeaders.Contains("Fineract-Platform-TenantId"))
+            {
+                _client.DefaultRequestHeaders.Add("Fineract-Platform-TenantId", _tenantId);
+            }
+
+            // Log the headers for debugging
+            Console.WriteLine("Default Request Headers:");
+            foreach (var header in _client.DefaultRequestHeaders)
+            {
+                Console.WriteLine($"{header.Key}: {string.Join(", ", header.Value)}");
+            }
+            Console.WriteLine($"Tenant ID: {_tenantId}");
+
+            // Disable SSL Verification (for development purposes only)
+            ServicePointManager.ServerCertificateValidationCallback = new RemoteCertificateValidationCallback((sender, certificate, chain, sslPolicyErrors) => true);
         }
 
         public async Task<HttpResponseMessage> GetAsync(string endpoint)

@@ -7,12 +7,14 @@ using Newtonsoft.Json;
 using fluxPay.Clients;
 using fluxPay.DTOs; 
 using fluxPay.Interfaces.Services;
+using FluxPay.Models;
 
 namespace fluxPay.Services
 {
     public class FineractApiService : IFineractApiService
     {
         private readonly FineractClient _fineractClient;
+
 
         public FineractApiService(FineractClient fineractClient)
         {
@@ -46,9 +48,12 @@ namespace fluxPay.Services
 
         public async Task<string> GetClientAsync(int clientId)
         {
-            var requestUri = $"api/v1/clients/{clientId}?staffInSelectedOfficeOnly=false";
+            var requestUri = $"/fineract-provider/api/v1/clients/{clientId}";
 
-            var response = await _fineractClient.GetAsync(requestUri);
+            Console.WriteLine("Request URI: " + requestUri);
+            Console.WriteLine("Authorization Header: " + _fineractClient._client.DefaultRequestHeaders.Authorization);
+
+            var response = await _fineractClient._client.GetAsync(requestUri);
 
             if (response.IsSuccessStatusCode)
             {

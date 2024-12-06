@@ -31,7 +31,7 @@ namespace fluxPay.Controllers
         }
 
         [HttpGet("get-client/{clientId}")]
-        public async Task<IActionResult> GetClient(int clientId)
+        public async Task<IActionResult> GetClient(int clientId, [FromQuery] bool staffInSelectedOfficeOnly)
         {
             try
             {

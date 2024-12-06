@@ -2,17 +2,32 @@ using System.ComponentModel;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using fluxPay.Clients;
+using fluxPay.Data;
 using fluxPay.Interfaces.Services;
 using fluxPay.Services;
+using Microsoft.EntityFrameworkCore;
 
 
 var builder = WebApplication.CreateBuilder(args);
 
 
+// Access configuration
+var fineractConfig = builder.Configuration.GetSection("Fineract");
+
+// Register TenantId and FineractClient properly
+builder.Services.AddSingleton(fineractConfig["TenantId"]);
+
+// Register FineractClient with HttpClient
 builder.Services.AddHttpClient<FineractClient>();
+
 
 builder.Services.AddScoped<IFineractApiService, FineractApiService>();
 builder.Services.AddScoped<AuthService>();
+
+builder.Services.AddDbContext<fluxPayDbContext>(opt =>
+{
+    opt.UseSqlServer(builder.Configuration.GetConnectionString("SQLServerDatabase"));
+});
 
 // Add services to the container.
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle

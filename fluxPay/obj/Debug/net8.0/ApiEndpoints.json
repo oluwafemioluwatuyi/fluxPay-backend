@@ -1,0 +1,39 @@
+[
+  {
+    "ContainingType": "fluxPay.Controllers.AuthController",
+    "Method": "GetClient",
+    "RelativePath": "api/Auth/get-client/{clientId}",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "clientId",
+        "Type": "System.Int32",
+        "IsRequired": true
+      },
+      {
+        "Name": "staffInSelectedOfficeOnly",
+        "Type": "System.Boolean",
+        "IsRequired": false
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "fluxPay.Controllers.AuthController",
+    "Method": "RegisterClient",
+    "RelativePath": "api/Auth/register-client",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "createClientRequestDto",
+        "Type": "fluxPay.DTOs.CreateClientRequestDto",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  }
+]
