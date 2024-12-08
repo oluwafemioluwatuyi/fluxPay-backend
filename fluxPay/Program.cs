@@ -3,12 +3,15 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using fluxPay.Clients;
 using fluxPay.Data;
+using fluxPay.Interfaces.Repositories;
 using fluxPay.Interfaces.Services;
+using fluxPay.Repositories;
 using fluxPay.Services;
 using Microsoft.EntityFrameworkCore;
 
 
 var builder = WebApplication.CreateBuilder(args);
+builder.Services.AddHttpContextAccessor();
 
 
 // Access configuration
@@ -24,6 +27,9 @@ builder.Services.AddHttpClient<FineractClient>();
 builder.Services.AddScoped<IFineractApiService, FineractApiService>();
 builder.Services.AddScoped<AuthService>();
 
+builder.Services.AddScoped<IUserRepository, UserRepository>();
+
+
 builder.Services.AddDbContext<fluxPayDbContext>(opt =>
 {
     opt.UseSqlServer(builder.Configuration.GetConnectionString("SQLServerDatabase"));
@@ -35,20 +41,20 @@ builder.Services.AddDbContext<fluxPayDbContext>(opt =>
 builder.Services.AddSwaggerGen();
 
 builder.Services.AddControllers();
-    // .AddJsonOptions(options =>
-    // {
-    //     options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter(JsonNamingPolicy.CamelCase));
-    //     // Uncomment the next line if you have a custom DateTime converter
-    //     // options.JsonSerializerOptions.Converters.Add(new DateTimeConverter());
-    // })
-    // .AddNewtonsoftJson(options =>
-    // {
-    //     options.SerializerSettings.Converters.Add(new Newtonsoft.Json.Converters.StringEnumConverter { AllowIntegerValues = true });
-    //     // Uncomment the next line if you have a custom DateTime converter
-    //     // options.SerializerSettings.Converters.Add(new MultiFormatDateTimeConverter());
-    // });
+// .AddJsonOptions(options =>
+// {
+//     options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter(JsonNamingPolicy.CamelCase));
+//     // Uncomment the next line if you have a custom DateTime converter
+//     // options.JsonSerializerOptions.Converters.Add(new DateTimeConverter());
+// })
+// .AddNewtonsoftJson(options =>
+// {
+//     options.SerializerSettings.Converters.Add(new Newtonsoft.Json.Converters.StringEnumConverter { AllowIntegerValues = true });
+//     // Uncomment the next line if you have a custom DateTime converter
+//     // options.SerializerSettings.Converters.Add(new MultiFormatDateTimeConverter());
+// });
 
-
+builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 
 builder.Services.AddSingleton<IConfiguration>(builder.Configuration);
 

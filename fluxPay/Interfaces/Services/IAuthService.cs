@@ -5,7 +5,7 @@ namespace fluxPay.Interfaces.Services
     public interface IAuthService
     {
         Task<object> Login(LoginRequestDto loginRequestDto);
-        Task<object> Register(RegisterRequestDto registerRequestDto);
+        Task <object> Register(RegisterRequestDto registerRequestDto, AccountNumberFormatDto accountNumberFormat, int clientId, int productId, DateTime submittedOnDate);
         Task<object> VerifyEmail(VerifyEmailRequestDto verifyEmailRequestDto);
         Task<object> ResendEmailVerification(RegisterRequestDto registerRequestDto);
         Task<object> ForgotPassword(ForgotPasswordRequestDto forgotPasswordRequestDto);

@@ -1,37 +1,71 @@
 [
   {
     "ContainingType": "fluxPay.Controllers.AuthController",
-    "Method": "GetClient",
-    "RelativePath": "api/Auth/get-client/{clientId}",
-    "HttpMethod": "GET",
-    "IsController": true,
-    "Order": 0,
-    "Parameters": [
-      {
-        "Name": "clientId",
-        "Type": "System.Int32",
-        "IsRequired": true
-      },
-      {
-        "Name": "staffInSelectedOfficeOnly",
-        "Type": "System.Boolean",
-        "IsRequired": false
-      }
-    ],
-    "ReturnTypes": []
-  },
-  {
-    "ContainingType": "fluxPay.Controllers.AuthController",
-    "Method": "RegisterClient",
-    "RelativePath": "api/Auth/register-client",
+    "Method": "Register",
+    "RelativePath": "api/Auth/register",
     "HttpMethod": "POST",
     "IsController": true,
     "Order": 0,
     "Parameters": [
       {
-        "Name": "createClientRequestDto",
-        "Type": "fluxPay.DTOs.CreateClientRequestDto",
+        "Name": "registerRequestDto",
+        "Type": "fluxPay.DTOs.AuthDtos.RegisterRequestDto",
         "IsRequired": true
+      },
+      {
+        "Name": "Id",
+        "Type": "System.Int32",
+        "IsRequired": false
+      },
+      {
+        "Name": "AccountType.Id",
+        "Type": "System.Int32",
+        "IsRequired": false
+      },
+      {
+        "Name": "AccountType.Code",
+        "Type": "System.String",
+        "IsRequired": false
+      },
+      {
+        "Name": "AccountType.Value",
+        "Type": "System.String",
+        "IsRequired": false
+      },
+      {
+        "Name": "PrefixType.Id",
+        "Type": "System.Int32",
+        "IsRequired": false
+      },
+      {
+        "Name": "PrefixType.Code",
+        "Type": "System.String",
+        "IsRequired": false
+      },
+      {
+        "Name": "PrefixType.Value",
+        "Type": "System.String",
+        "IsRequired": false
+      },
+      {
+        "Name": "PrefixCharacter",
+        "Type": "System.String",
+        "IsRequired": false
+      },
+      {
+        "Name": "clientId",
+        "Type": "System.Int32",
+        "IsRequired": false
+      },
+      {
+        "Name": "productId",
+        "Type": "System.Int32",
+        "IsRequired": false
+      },
+      {
+        "Name": "submittedOnDate",
+        "Type": "System.DateTime",
+        "IsRequired": false
       }
     ],
     "ReturnTypes": []

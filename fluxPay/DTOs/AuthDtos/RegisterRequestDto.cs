@@ -2,7 +2,7 @@
 
 namespace fluxPay.DTOs.AuthDtos
 {
-    public interface RegisterRequestDto
+    public class RegisterRequestDto
     {
         [Required]
         public string FirstName { get; set; }
@@ -22,6 +22,8 @@ namespace fluxPay.DTOs.AuthDtos
         public string NIN { get; set; } 
         [Required]
         public string DateOfBirth { get; set; } 
+         [Required]
+        public AccountTypeDto accountType {get; set;}
 
        
         public string ReferralCode { get; set; } 
