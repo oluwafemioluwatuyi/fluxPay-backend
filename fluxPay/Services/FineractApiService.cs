@@ -11,6 +11,7 @@ using fluxPay.Interfaces.Services;
 using FluxPay.Models;
 using fluxPay.Helpers;
 using System.Net.Http.Headers;
+using fluxPay.Utils;
 
 namespace fluxPay.Services
 {
@@ -64,16 +65,13 @@ namespace fluxPay.Services
             // Step 2: Prepare Payload
             var createAccountRequest = new
             {
-                clientId = 1, // Replace with the actual client ID
+                clientId = 2, // Replace with the actual client ID
                 productId = 1, // Replace with the actual product ID
                 locale = "en", // Assuming English locale
-                dateFormat = "dd MMMM yyyy", // Ensure the correct date format is used
+                dateFormat = "dd MMMM yyyy", 
+                accountNo = AccountGenerator.GenerateAccountNumber(),// Ensure the correct date format is used
                 submittedOnDate = DateTime.UtcNow.ToString("dd MMMM yyyy") // Format the date as required
             };
-
-            _fineractClient._client.DefaultRequestHeaders.Accept.Add(
-              new MediaTypeWithQualityHeaderValue("application/json")
-);
 
             // Step 3: Make API Call
             var response = await _fineractClient._client.PostAsJsonAsync("/fineract-provider/api/v1/savingsaccounts", createAccountRequest);
@@ -158,21 +156,22 @@ namespace fluxPay.Services
             private string GenerateAccountNumber(AccountNumberFormatDto accountNumberFormat, AccountTypeDto accountType)
         {
                 // Default prefix if none provided
-            string prefix = accountNumberFormat.PrefixType?.Value ?? "00";
+            // Default prefix if none provided, and make sure it starts with "1"
+                string prefix = accountNumberFormat.PrefixType?.Value ?? "1";
 
-            // Use the account type value to determine the account type code
-            string accountTypeCode = accountType.Value switch
-            {
-                "CLIENT" => "01",
-                "LOAN" => "02",
-                _ => "99" // Default for unknown types
-            };
+                // Ensure the account number starts with "1" and is 10 digits
+                string accountTypeCode = accountType.Value switch
+                {
+                    "CLIENT" => "01", // Account type "CLIENT" gets a code "01"
+                    "LOAN" => "02",    // Account type "LOAN" gets a code "02"
+                    _ => "99"          // Default code for unknown types
+                };
 
-            // Generate a unique identifier (e.g., timestamp-based or GUID)
-            string uniqueId = DateTime.UtcNow.Ticks.ToString().Substring(0, 10); // First 10 characters of ticks
+                // Generate a unique part for the account number, ensuring it's exactly 7 digits long
+                string uniqueId = new Random().Next(1000000, 9999999).ToString(); // Random 7-digit number
 
-            // Combine prefix, account type code, and unique ID
-            return $"{prefix}{accountTypeCode}{uniqueId}";
+                // Combine the parts to form a 10-digit account number
+                return $"{prefix}{accountTypeCode}{uniqueId}";
                 }
 
 }

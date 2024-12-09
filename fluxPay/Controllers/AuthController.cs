@@ -27,7 +27,7 @@ namespace fluxPay.Controllers
                 }
                     // Call the service to handle the registration process
                     var result = await _authService.Register(registerRequestDto, accountNumberFormat, clientId, productId, submittedOnDate);        
-                    return StatusCode(500, new { Success = false, Message = "An unexpected error occurred. Please try again later." });            
+                    return StatusCode(201, new { Success = false, Message = "Successful." });            
         }
 
         // [HttpPost("register-client")]
