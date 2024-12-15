@@ -19,14 +19,12 @@ namespace fluxPay.DTOs.AuthDtos
         [Required]
         public string BVN { get; set; } 
         [Required]
-        public string NIN { get; set; } 
+        public VerifyPassportDto Passport { get; set; } 
         [Required]
         public string DateOfBirth { get; set; } 
          [Required]
         public AccountTypeDto accountType {get; set;}
-
-       
+ 
         public string ReferralCode { get; set; } 
-        public string UserType { get; set; }
     }
 }

@@ -11,7 +11,6 @@ using fluxPay.Interfaces.Services;
 using FluxPay.Models;
 using fluxPay.Helpers;
 using System.Net.Http.Headers;
-using fluxPay.Utils;
 
 namespace fluxPay.Services
 {
@@ -59,17 +58,13 @@ namespace fluxPay.Services
             throw new ArgumentNullException(nameof(accountNumberFormat), "Account number format cannot be null.");
         }
 
-        // Step 1: Generate Account Number
-        string accountNumber = GenerateAccountNumber(accountNumberFormat, accountType);
-
             // Step 2: Prepare Payload
             var createAccountRequest = new
             {
-                clientId = 2, // Replace with the actual client ID
+                clientId = 3, // Replace with the actual client ID
                 productId = 1, // Replace with the actual product ID
                 locale = "en", // Assuming English locale
                 dateFormat = "dd MMMM yyyy", 
-                accountNo = AccountGenerator.GenerateAccountNumber(),// Ensure the correct date format is used
                 submittedOnDate = DateTime.UtcNow.ToString("dd MMMM yyyy") // Format the date as required
             };
 
@@ -152,27 +147,60 @@ namespace fluxPay.Services
             }
         }
 
-
-            private string GenerateAccountNumber(AccountNumberFormatDto accountNumberFormat, AccountTypeDto accountType)
+        public async Task<OtpConfigDto> GetOtpConfigure()
         {
-                // Default prefix if none provided
-            // Default prefix if none provided, and make sure it starts with "1"
-                string prefix = accountNumberFormat.PrefixType?.Value ?? "1";
+             var requestUrl = $"/fineract-provider/api/v1/twofactor/configure";
+            var response = await _fineractClient._client.GetAsync(requestUrl);
 
-                // Ensure the account number starts with "1" and is 10 digits
-                string accountTypeCode = accountType.Value switch
+            if (response.IsSuccessStatusCode)
+            {
+                var content = await response.Content.ReadAsStringAsync();
+                var settings = JsonConvert.DeserializeObject<List<KeyValuePair<string, string>>>(content);
+
+                var otpConfig = new OtpConfigDto
                 {
-                    "CLIENT" => "01", // Account type "CLIENT" gets a code "01"
-                    "LOAN" => "02",    // Account type "LOAN" gets a code "02"
-                    _ => "99"          // Default code for unknown types
+                    OtpTokenLength = int.Parse(settings.FirstOrDefault(kvp => kvp.Key == "otp-token-length").Value ?? "6"),
+                    OtpTokenExpiryTime = int.Parse(settings.FirstOrDefault(kvp => kvp.Key == "otp-token-live-time").Value ?? "300") ,
+                    OtpSubjectTemplate = settings.FirstOrDefault(kvp => kvp.Key == "otp-delivery-email-subject").Value ?? "Your OTP Code", // Default subject
+                   OtpBodyTemplate = settings.FirstOrDefault(kvp => kvp.Key == "otp-delivery-email-body").Value ?? "Your OTP code is {{token}}. It will expire in {{expiryTime}} minutes." // Default body
                 };
 
-                // Generate a unique part for the account number, ensuring it's exactly 7 digits long
-                string uniqueId = new Random().Next(1000000, 9999999).ToString(); // Random 7-digit number
+                return otpConfig;
+            }
+            else
+            {
+                throw new Exception("Failed to retrieve OTP configuration from Fineract.");
+            }
+        }
 
-                // Combine the parts to form a 10-digit account number
-                return $"{prefix}{accountTypeCode}{uniqueId}";
-                }
+        public async Task<SmtpSettings> GetSmtpAsync()
+        {
+            var requestUrl = $"/fineract-provider/api/v1/externalservice/SMTP";
+            var response = await  _fineractClient._client.GetAsync(requestUrl);
+            response.EnsureSuccessStatusCode();
+
+        var settings = await response.Content.ReadFromJsonAsync<List<KeyValuePair<string, string>>>();
+
+                foreach (var kvp in settings)
+            {
+                Console.WriteLine($"Key: {kvp.Key}, Value: {kvp.Value}");
+            }
+
+        var smtpSettings = new SmtpSettings
+        {
+            Host = settings.FirstOrDefault(kvp => kvp.Key == "host").Value,
+            Port = int.Parse(settings.FirstOrDefault(kvp => kvp.Key == "port").Value ?? "25"),
+            UseTLS = bool.Parse(settings.FirstOrDefault(kvp => kvp.Key == "useTLS").Value ?? "false"),
+            Username = settings.FirstOrDefault(kvp => kvp.Key == "username").Value,
+            Password = settings.FirstOrDefault(kvp => kvp.Key == "password").Value,
+            FromEmail = settings.FirstOrDefault(kvp => kvp.Key == "fromEmail").Value,
+            FromName = settings.FirstOrDefault(kvp => kvp.Key == "fromName").Value
+        };
+
+         return smtpSettings;
+ 
+            
+        }
 
 }
     
@@ -209,6 +237,10 @@ public class PrefixTypeDto
     public string Code { get; set; }
     public string Value { get; set; }
 }
+
+
+
+
 
 
 

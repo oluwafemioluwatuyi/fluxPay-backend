@@ -8,5 +8,8 @@ namespace fluxPay.DTOs.AuthDtos
         public string Username { get; set; }  
         [Required]
         public string Password { get; set; }
+        
+        public string Email {get; set;}
+        public string Otp {get; set;}
     }
 }

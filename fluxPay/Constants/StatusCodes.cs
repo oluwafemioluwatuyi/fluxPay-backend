@@ -7,7 +7,7 @@ public enum AppStatusCodes
     Success = 0000,
     BvnNotVerified = 0001,
     EmailNotVerified = 0002,
-    NoLinkedWallet = 0003,
+    PhoneAlreadyExists = 0003,
     InvalidCredentials = 0004,
     InvalidVerificationToken = 0005,
     NoWalletsLinked = 0006,

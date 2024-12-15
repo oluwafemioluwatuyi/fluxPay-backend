@@ -19,14 +19,19 @@ namespace fluxPay.Controllers
 
     
           [HttpPost("register")]
-         public async Task<IActionResult> Register([FromBody] RegisterRequestDto registerRequestDto, [FromQuery] AccountNumberFormatDto accountNumberFormat, int clientId, int productId, DateTime submittedOnDate)
+         public async Task<IActionResult> Register([FromBody] RegisterRequestDto registerRequestDto)
         {
-                if (registerRequestDto == null || accountNumberFormat == null)
+                if (registerRequestDto == null)
                 {
                     return BadRequest(new { Success = false, Message = "Invalid input data." });
                 }
                     // Call the service to handle the registration process
-                    var result = await _authService.Register(registerRequestDto, accountNumberFormat, clientId, productId, submittedOnDate);        
+                    var result = await _authService.Register(registerRequestDto);  
+                    if(result is null)
+                    {
+                        return BadRequest(new { Success = false, Message = "Invalid input data." });
+
+                    }
                     return StatusCode(201, new { Success = false, Message = "Successful." });            
         }
 

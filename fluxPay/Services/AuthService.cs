@@ -1,10 +1,17 @@
 using AutoMapper;
+using fluxPay.Constants;
 using fluxPay.DTOs;
 using fluxPay.DTOs.AuthDtos;
+using fluxPay.Helpers;
 using fluxPay.Interfaces.Repositories;
 using fluxPay.Interfaces.Services;
 using FluxPay.Models;
+using FluxPay.Utils;
 using Microsoft.Extensions.Configuration;
+using Microsoft.IdentityModel.Tokens;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Text;
 using System.Threading.Tasks;
 
 namespace fluxPay.Services
@@ -13,124 +20,200 @@ namespace fluxPay.Services
     {
         private readonly IFineractApiService _fineractApiService;
         private readonly IUserRepository userRepository;
+
+        private readonly IEmailService _emailService;
         private readonly IMapper mapper;
 
         private IHttpContextAccessor httpContextAccessor;
         private readonly IConfiguration _configuration;
+        private readonly IClientService _clientService;
+        private readonly OtpService _otpService;
+        private readonly Dictionary<string, OtpDto> _otpCache = new();
 
-        public AuthService(IFineractApiService fineractApiService, IUserRepository userRepository, IMapper mapper, IConfiguration configuration, IHttpContextAccessor httpContextAccessor)
+        private readonly IOtpService _otpService1;
+
+        public AuthService(IFineractApiService fineractApiService, IUserRepository userRepository, IMapper mapper, IConfiguration configuration, IHttpContextAccessor httpContextAccessor, IEmailService emailService, IClientService clientService, OtpService otpService, OtpService1 otpService1)
         {
             _fineractApiService = fineractApiService;
             _configuration = configuration;
             this.userRepository = userRepository;
             this.mapper = mapper;
             this.httpContextAccessor = httpContextAccessor;
+            _emailService = emailService;
+            _clientService = clientService;
+            _otpService = otpService;
+            _otpService1 = otpService1;
 
         }
-
-        // // Register client method
-        // public async Task<string> RegisterClientAsync(CreateClientRequestDto createClientRequestDto)
-        // {
-        //     // Here you can do any preprocessing or validation if needed
-        //     // For example, check if the client already exists or other validations
-
-        //     try
-        //     {
-        //         // Create the client via the FineractApiService
-        //         var clientId = await _fineractApiService.CreateClientAsync(createClientRequestDto);
-        //         return clientId;
-        //     }
-        //     catch (Exception ex)
-        //     {
-        //         // Handle any errors that might occur during client registration
-        //         throw new Exception($"An error occurred while registering the client: {ex.Message}");
-        //     }
-        // }
-        // public async Task<string> GetClientAsync(int clientId)
-        // {
-        //     try
-        //     {
-        //         var client = await _fineractApiService.GetClientAsync(clientId);
-        //         return client;
-        //     }
-        //     catch (Exception ex)
-        //     {
-        //         // Handle any errors that might occur while fetching client details
-        //         throw new Exception($"An error occurred while retrieving the client: {ex.Message}");
-        //     }
-        // }
        
-        public Task<object> Login(LoginRequestDto loginRequestDto)
+        public async Task<object> Login(LoginRequestDto loginRequestDto)
         {
-            throw new NotImplementedException();
+            // Step 1: Check username and password
+        var user = await _clientService.FindByEmailAsync(loginRequestDto.Username);
+        if (user == null)
+        {
+            return "Invalid username or password";
+        }
+        // Step 2: Send OTP (if 2FA is enabled)
+          var otpSent = await _otpService1.RequestOtpAsync(loginRequestDto.Email);
+        if (!otpSent)
+        {
+            return "Failed to send OTP. Please try again.";
         }
 
-        public async Task<object> Register(RegisterRequestDto registerRequestDto, AccountNumberFormatDto accountNumberFormat, int clientId, int productId, DateTime submittedOnDate)
+        // Step 3: Validate OTP
+        var isOtpValid = await _otpService1.ValidateOtpEmailAsync(loginRequestDto.Email, loginRequestDto.Otp);
+        if (!isOtpValid)
         {
-            // using var transaction = await userRepository.BeginTransactionAsync();
-
-        try
+            return "Invalid OTP. Please try again.";
+        }
+         return new ServiceResponse<string>(
+                        ResponseStatus.Error,
+                        AppStatusCodes. EmailNotVerified,
+                        "Invalid request.",
+                        null);
+        }
+        public async Task<ServiceResponse<string>> Register(RegisterRequestDto registerRequestDto)
         {
-           //var existingUser = await userRepository.GetUserByEmail(registerRequestDto.Email);
-           // if (existingUser != null)
-           // {
-           //     throw new InvalidOperationException("Email already registered.");
-           // }
+                        if (registerRequestDto == null)
+                {
+                   return new ServiceResponse<string>(
+                        ResponseStatus.Error,
+                        AppStatusCodes. EmailNotVerified,
+                        "Invalid request.",
+                        null);
+                }
+            var email = registerRequestDto.Email;
 
-             var accountNumberFormatResponse = await _fineractApiService.ConfigureAccountNumber(accountNumberFormat);
-            if (accountNumberFormatResponse is null)
+            // Step 1: Email validation
+            var emailExists = await _clientService.FindByEmailAsync(email); // Use the API to check for the email
+            if (emailExists != null)
             {
-               throw new InvalidOperationException("Email already registered.");
+                return new ServiceResponse<string>(
+                            ResponseStatus.Error,
+                            AppStatusCodes. EmailNotVerified,
+                            "Invalid request.",
+                            null);
             }
-
-            // 3 Find the relevant account number format based on the account type (assumed logic here)
-          
-
-           // var accountNumberFormat = accountNumberFormatResponse;
-
-            // Step 4: Generate Account Number Using Switch Statement
-            string accountNumber = string.Empty;
-            switch (accountNumberFormat.AccountType.Value)
+            // Step 2: Phone Number Verification
+            var phoneExists = await _clientService.FindByPhoneNumberAsync(registerRequestDto.PhoneNumber);
+            if (phoneExists != null)
             {
-               case "CLIENT":
-          accountNumber = $"{accountNumberFormat.PrefixType.Value}-CLIENT";
-            break;
-
-        case "LOAN":
-            accountNumber = $"{accountNumberFormat.PrefixType.Value}-LOAN";
-            break;
-
-                default:
-                   throw new InvalidOperationException("Email already registered.");
+                return new ServiceResponse<string>(
+                    ResponseStatus.Error,
+                    AppStatusCodes.PhoneAlreadyExists,
+                    "The phone number is already registered.",
+                    null);
             }
-
-          // Step 4: Call Fineract API to create the account with the generated account number
-        var createAccountResponse = await _fineractApiService.CreateAccountNumber(accountNumberFormat, registerRequestDto.accountType, clientId, productId, DateTime.Now);
-        if (createAccountResponse is null)
+        // Step 4: Passport Verification (Conditional)
+        if (registerRequestDto.Passport != null)  // Ensure Passport is provided before verification
         {
-            throw new InvalidOperationException("Failed to create account in Fineract.");
-        }
-           // await transaction.CommitAsync();
+            var (isPassportValid, passportMessage) = await VerifyPassport(new VerifyPassportDto
+            {
+                PassportNumber = registerRequestDto.Passport.PassportNumber,
+                Name = $"{registerRequestDto.FirstName} {registerRequestDto.LastName}", 
+                DateOfBirth = registerRequestDto.DateOfBirth 
+            });
 
-            return (new { Success = true, Message = "User registered successfully." });
-        }
-        catch (Exception ex)
-        {
-            // If any operation fails, rollback the transaction to revert all changes
-           // await transaction.RollbackAsync();
-            return (500, new { Success = false, Message = ex.Message });
-        }
-           
+            if (!isPassportValid)
+            {
+                return new ServiceResponse<string>(
+                    ResponseStatus.Error,
+                    AppStatusCodes.ValidationError,
+                    passportMessage,
+                    null);
+            }
+        }       
+           // Step 5: Face recognization
+
+            // Step 6:  Sending otp to a user phone number
+             var generatedToken = await _otpService1.RequestOtpAsync(email);
+             if(generatedToken is false)
+            return new ServiceResponse<string>(
+                            ResponseStatus.Error,
+                            AppStatusCodes. EmailNotVerified,
+                            "Invalid request.",
+                            null);
+
+            return new ServiceResponse<string>(
+                            ResponseStatus.Success,
+                            AppStatusCodes. EmailNotVerified,
+                            "Token sent.",
+                            null);          
         }
 
-        public Task<object> VerifyEmail(VerifyEmailRequestDto verifyEmailRequestDto)
+         public Task<ServiceResponse<string>> VerifyAndCreateUserProfile(string token, string email, string phoneNumber, RegisterRequestDto registerRequestDto)
         {
             throw new NotImplementedException();
         }
 
-        public Task<object> ResendEmailVerification(RegisterRequestDto registerRequestDto)
+        public async Task<object> VerifyEmail(VerifyEmailRequestDto verifyEmailRequestDto)
         {
-            throw new NotImplementedException();
+            // Validate the input
+        if (string.IsNullOrEmpty(verifyEmailRequestDto.Email) || string.IsNullOrEmpty(verifyEmailRequestDto.Token))
+        {
+             return new ServiceResponse<string>(
+                            ResponseStatus.Error,
+                            AppStatusCodes.InvalidData,
+                            "cannot be void.",
+                            null);
+        }        
+            // Call the service method to validate the OTP
+            var isOtpValid = await _otpService1.ValidateOtpEmailAsync(verifyEmailRequestDto.Email, verifyEmailRequestDto.Token);
+
+            if (!isOtpValid)
+            {
+                 return new ServiceResponse<string>(
+                            ResponseStatus.BadRequest,
+                            AppStatusCodes.InvalidData,
+                            "Token incorrect.",
+                            null);
+            }
+             return new ServiceResponse<string>(
+                            ResponseStatus.Success,
+                            AppStatusCodes.Success,
+                            "Token sent.",
+                            null);
+      
+    }
+        public async Task<object> ResendEmailVerification(ResendEmailVerificationDto resendEmailVerificationDto)
+        {
+             // Step 1: Check if user exists by email
+        var user = await _clientService.FindByEmailAsync(resendEmailVerificationDto.Email);
+        if (user == null)
+        {
+            return new ServiceResponse<string>(
+                ResponseStatus.Error,
+                AppStatusCodes.InvalidData,
+                "User with the provided email does not exist.",
+                null);
+        }
+
+        // Step 2: Check if email is already verified
+        // if (user.EmailVerified)
+        // {
+        //     return new ServiceResponse<string>(
+        //         ResponseStatus.Error,
+        //         AppStatusCodes.EmailNotVerified,
+        //         "Email has already been verified.",
+        //         null);
+        // }
+
+        // Step 3: Generate verification token (this can be a unique token generation logic)
+          var generatedToken = await _otpService1.RequestOtpAsync(resendEmailVerificationDto.Email);
+             if(generatedToken is false)
+            return new ServiceResponse<string>(
+                            ResponseStatus.Error,
+                            AppStatusCodes. EmailNotVerified,
+                            "Invalid request.",
+                            null);
+
+        // Step 5: Return success response
+        return new ServiceResponse<string>(
+            ResponseStatus.Success,
+            AppStatusCodes.Success,
+            "Verification email sent successfully.",
+            null);
         }
 
         public Task<object> ForgotPassword(ForgotPasswordRequestDto forgotPasswordRequestDto)
@@ -171,5 +254,187 @@ namespace fluxPay.Services
         {
             throw new NotImplementedException();
         }
+
+        
+        private async Task SendVerificationMail(User user, string emailVerificationToken)
+
+                
+        {
+            try
+                {
+                    await _emailService.SendEmailAsync(user.Email, "Verify your email", "VerifyEmail", new
+                    {
+                        FrontendBaseUrl = "http://example.com", // Replace with your actual frontend URL when ready
+                        Name = user.FirstName,
+                        EmailVerificationToken = emailVerificationToken,
+                        UserId = user.Id,
+                        Email = user.Email
+                    });
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Error sending verification email to {user.Email}: {ex.Message}");
+                }
+         }
+    
+              
+            public string GenerateEmailVerificationToken(User user)          
+         {
+             
+             List<Claim> claims = new List<Claim>{
+            new Claim(ClaimTypes.Email, user.Email),
+            new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
+            };
+
+            // Read secret key, issuer, and audience directly from the configuration
+            var secretKey = _configuration["JwtSettings:SecretKey"];
+            var issuer = _configuration["JwtSettings:Issuer"];
+            var audience = _configuration["JwtSettings:Audience"];
+
+            // Creating a new SymmetricKey from the secret key
+            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey));
+
+            // Declaring signing credentials
+            var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha512Signature);
+
+            // Creating new JWT object
+            var token = new JwtSecurityToken(
+                issuer: issuer,
+                audience: audience,
+                claims: claims,
+                expires: DateTime.Now.AddDays(1), // Token expires in 1 day
+                signingCredentials: creds
+            );
+
+            // Write JWT to a string
+            var jwt = new JwtSecurityTokenHandler().WriteToken(token);
+
+            return jwt;
+         }
+
+        private string HashPassword(string password)
+        {
+
+            return BCrypt.Net.BCrypt.HashPassword(password);
+        }
+        private bool VerifyPassword(string password, string passwordHash)
+        {
+
+            return BCrypt.Net.BCrypt.Verify(password, passwordHash);
+        }
+         
+            private async Task<(bool, string)> VerifyPassport(VerifyPassportDto verifyPassportDto)
+        {
+            var message = "Passport verified successfully";
+
+            // Simulate async operation
+            await Task.Delay(0);
+
+            // TODO: Re-enable this when passport verification integration starts working
+            // try
+            // {
+            //     var response = await _passportVerificationService.VerifyPassportAsync(
+            //         mapper.Map<VerifyPassportDto, PassportVerificationRequestDto>(verifyPassportDto));
+
+            //     // Check name match
+            //     if (response.ResponseBody.Name.MatchPercentage < 80)
+            //     {
+            //         message = "Name does not sufficiently match passport details.";
+            //         return (false, message);
+            //     }
+
+            //     // Check date of birth
+            //     if (!response.ResponseBody.DateOfBirth.Equals(verifyPassportDto.DateOfBirth, StringComparison.OrdinalIgnoreCase))
+            //     {
+            //         message = "Date of birth does not match passport details.";
+            //         return (false, message);
+            //     }
+
+            //     // Check passport number
+            //     if (!response.ResponseBody.PassportNumber.Equals(verifyPassportDto.PassportNumber, StringComparison.OrdinalIgnoreCase))
+            //     {
+            //         message = "Passport number does not match provided details.";
+            //         return (false, message);
+            //     }
+            // }
+            // catch (Exception e)
+            // {
+            //     var parts = e.Message.Split(':');
+
+            //     if (parts.Length > 1 && parts[0] == "99")
+            //     {
+            //         message = parts[1];
+            //     }
+            //     else
+            //     {
+            //         message = "Unable to verify passport details.";
+            //     }
+
+            //     return (false, message);
+            // }
+
+            return (true, message);
+        }
+
+        public async Task<FineractApiResponse> SendOtpEmail(string email)
+        {
+     try
+    {
+        // Step 1: Fetch OTP configuration from the Fineract database
+        var otpConfig = await _clientService.GetOtpConfigureFromDb();
+
+        // Step 2: Generate OTP using the length from the configuration
+        var otpCode = _otpService.GenerateOtpCode(otpConfig.OtpTokenLength);
+
+        // Step 3: Cache OTP with expiry time
+        var expiryDate = DateTime.UtcNow.AddSeconds(otpConfig.OtpTokenExpiryTime);
+
+        var otpDto = new OtpDto
+        {
+            Code = otpCode,
+            ExpirationTime = expiryDate,
+            IsValid = true,
+            OtpType = "Login",
+            GeneratedAt = DateTime.UtcNow
+        };
+
+        // Assuming _otpCache is implemented properly (e.g., IMemoryCache or a distributed cache)
+        _otpCache[email] = otpDto;
+
+        // Step 4: Prepare the email content
+        var subject = otpConfig.OtpSubjectTemplate;
+        var body = otpConfig.OtpBodyTemplate
+            .Replace("{{token}}", otpCode)
+            .Replace("{{expiryTime}}", (otpConfig.OtpTokenExpiryTime / 60).ToString());
+
+        var emailModel = new OtpEmailModel
+        {
+            Token = otpCode,
+            ExpiryTimeInMinutes = otpConfig.OtpTokenExpiryTime / 60
+        };
+
+        // Step 5: Send the email
+        await _emailService.SendOtpEmailAsync(email, subject, body, emailModel);
+
+        return new FineractApiResponse
+        {
+            Success = true,
+            Message = "OTP sent to email successfully."
+        };
     }
+    catch (Exception ex)
+    {
+        // Log exception for troubleshooting (if logging is implemented)
+        // _logger.LogError(ex, "Error while sending OTP email");
+
+        return new FineractApiResponse
+        {
+            Success = false,
+            Message = $"Error generating OTP or sending email: {ex.Message}"
+        };
+    }
+
+   }
+    
+ }
 }

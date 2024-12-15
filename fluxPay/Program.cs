@@ -8,6 +8,11 @@ using fluxPay.Interfaces.Services;
 using fluxPay.Repositories;
 using fluxPay.Services;
 using Microsoft.EntityFrameworkCore;
+using System.IO;
+using Microsoft.Extensions.DependencyInjection;
+using FluxPay.Utils;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -25,10 +30,55 @@ builder.Services.AddHttpClient<FineractClient>();
 
 
 builder.Services.AddScoped<IFineractApiService, FineractApiService>();
+
 builder.Services.AddScoped<AuthService>();
 
 builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<OtpService>();
 
+builder.Services.AddScoped<IEmailService>(provider =>
+{
+   var logger = provider.GetRequiredService<ILogger<EmailService>>();
+    var environment = provider.GetRequiredService<IWebHostEnvironment>();
+    var fineractApiService = provider.GetRequiredService<IFineractApiService>();
+    var templatesFolderPath = Path.Combine(environment.ContentRootPath, "Emails");
+    var clientService = provider.GetRequiredService<IClientService>();
+
+    return new EmailService(templatesFolderPath, logger, builder.Configuration, fineractApiService, clientService);
+});
+
+builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection("JwtSettings"));
+
+// Make JwtSettings globally available
+var jwtSettings = builder.Configuration.GetSection("JwtSettings").Get<JwtSettings>();
+
+// Add authentication services
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = "Bearer";
+    options.DefaultChallengeScheme = "Bearer";
+})
+.AddJwtBearer("Bearer", options =>
+{
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuer = true,
+        ValidateAudience = true,
+        ValidateIssuerSigningKey = true,
+        ValidIssuer = jwtSettings.Issuer,
+        ValidAudience = jwtSettings.Audience,
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings.SecretKey))
+    };
+});
+
+// Retrieve the connection string from appsettings.json
+string connectionString = builder.Configuration.GetConnectionString("FineractDatabase");
+
+// Register the ClientService with the connection string
+builder.Services.AddScoped<IClientService>(provider => new ClientService(connectionString));
+
+// Bind SMTP settings from appsettings.json to a strongly-typed object
+builder.Services.Configure<SmtpSettings>(builder.Configuration.GetSection("SMTP"));
 
 builder.Services.AddDbContext<fluxPayDbContext>(opt =>
 {

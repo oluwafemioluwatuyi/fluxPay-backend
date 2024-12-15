@@ -10,91 +10,6 @@
         "tags": [
           "Auth"
         ],
-        "parameters": [
-          {
-            "name": "Id",
-            "in": "query",
-            "schema": {
-              "type": "integer",
-              "format": "int32"
-            }
-          },
-          {
-            "name": "AccountType.Id",
-            "in": "query",
-            "schema": {
-              "type": "integer",
-              "format": "int32"
-            }
-          },
-          {
-            "name": "AccountType.Code",
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "AccountType.Value",
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "PrefixType.Id",
-            "in": "query",
-            "schema": {
-              "type": "integer",
-              "format": "int32"
-            }
-          },
-          {
-            "name": "PrefixType.Code",
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "PrefixType.Value",
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "PrefixCharacter",
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "clientId",
-            "in": "query",
-            "schema": {
-              "type": "integer",
-              "format": "int32"
-            }
-          },
-          {
-            "name": "productId",
-            "in": "query",
-            "schema": {
-              "type": "integer",
-              "format": "int32"
-            }
-          },
-          {
-            "name": "submittedOnDate",
-            "in": "query",
-            "schema": {
-              "type": "string",
-              "format": "date-time"
-            }
-          }
-        ],
         "requestBody": {
           "content": {
             "application/json": {
@@ -151,7 +66,7 @@
           "email",
           "firstName",
           "lastName",
-          "nin",
+          "passport",
           "password",
           "phoneNumber"
         ],
@@ -185,9 +100,8 @@
             "minLength": 1,
             "type": "string"
           },
-          "nin": {
-            "minLength": 1,
-            "type": "string"
+          "passport": {
+            "$ref": "#/components/schemas/VerifyPassportDto"
           },
           "dateOfBirth": {
             "minLength": 1,
@@ -199,8 +113,22 @@
           "referralCode": {
             "type": "string",
             "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "VerifyPassportDto": {
+        "type": "object",
+        "properties": {
+          "passportNumber": {
+            "type": "string",
+            "nullable": true
           },
-          "userType": {
+          "name": {
+            "type": "string",
+            "nullable": true
+          },
+          "dateOfBirth": {
             "type": "string",
             "nullable": true
           }
