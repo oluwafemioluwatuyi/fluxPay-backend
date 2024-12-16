@@ -11,7 +11,7 @@ namespace fluxPay.Helpers
     {  
         public MappingProfiles()
      {
-         CreateMap<User, UserDto>();
+         CreateMap<TempUser, UserDto>();
      }
 
     }

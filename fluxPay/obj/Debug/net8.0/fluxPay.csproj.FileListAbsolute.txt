@@ -36,7 +36,6 @@ C:\Users\USER\repo\fluxPay-backend\fluxPay\obj\Debug\net8.0\ref\fluxPay.dll
 C:\Users\USER\repo\fluxPay-backend\fluxPay\bin\Debug\net8.0\fluxPay.staticwebassets.endpoints.json
 C:\Users\USER\repo\fluxPay-backend\fluxPay\obj\Debug\net8.0\staticwebassets.build.endpoints.json
 C:\Users\USER\repo\fluxPay-backend\fluxPay\obj\Debug\net8.0\staticwebassets\msbuild.fluxPay.Microsoft.AspNetCore.StaticWebAssetEndpoints.props
-C:\Users\USER\repo\fluxPay-backend\fluxPay\obj\Debug\net8.0\staticwebassets.upToDateCheck.txt
 C:\Users\USER\repo\fluxPay-backend\fluxPay\bin\Debug\net8.0\Microsoft.EntityFrameworkCore.dll
 C:\Users\USER\repo\fluxPay-backend\fluxPay\bin\Debug\net8.0\Microsoft.EntityFrameworkCore.Abstractions.dll
 C:\Users\USER\repo\fluxPay-backend\fluxPay\bin\Debug\net8.0\Microsoft.Extensions.Caching.Abstractions.dll

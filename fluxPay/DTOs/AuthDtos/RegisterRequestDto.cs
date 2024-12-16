@@ -23,7 +23,7 @@ namespace fluxPay.DTOs.AuthDtos
         [Required]
         public string DateOfBirth { get; set; } 
          [Required]
-        public AccountTypeDto accountType {get; set;}
+        public AccountType accountType {get; set;}
  
         public string ReferralCode { get; set; } 
     }

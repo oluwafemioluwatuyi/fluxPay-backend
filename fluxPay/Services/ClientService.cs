@@ -23,14 +23,14 @@ namespace fluxPay.Services
         {
             _connectionString = connectionString;
         }
-        public async Task<object> FindByEmailAsync(string mail)
+        public async Task<ClientDto> FindByEmailAsync(string mail)
         {
              using (var connection = new MySqlConnection(_connectionString)) // Use MySqlConnection
         {
             await connection.OpenAsync();
             
             var query = "SELECT * FROM m_client WHERE email_address = @Email_Address";
-            return await connection.QueryFirstOrDefaultAsync<Client>(query, new { Email_Address = mail });
+            return await connection.QueryFirstOrDefaultAsync<ClientDto>(query, new { Email_Address = mail });
         }
         }
 

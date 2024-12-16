@@ -86,7 +86,7 @@ namespace fluxPay.Services
          var smtpSettings = new SmtpSettings
         {
             Host = "sandbox.smtp.mailtrap.io",
-            Port = 25,
+            Port = 2525,
             UseTLS = true,
             Username = "d400610248ca8f",
             Password = "5618657cc74a18",

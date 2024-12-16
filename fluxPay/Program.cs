@@ -30,11 +30,13 @@ builder.Services.AddHttpClient<FineractClient>();
 
 
 builder.Services.AddScoped<IFineractApiService, FineractApiService>();
+builder.Services.AddScoped<IOtpService, OtpService1>();
 
 builder.Services.AddScoped<AuthService>();
 
-builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<ITempUserRepository, TempUserRepository>();
 builder.Services.AddScoped<OtpService>();
+
 
 builder.Services.AddScoped<IEmailService>(provider =>
 {

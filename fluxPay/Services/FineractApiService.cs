@@ -11,6 +11,7 @@ using fluxPay.Interfaces.Services;
 using FluxPay.Models;
 using fluxPay.Helpers;
 using System.Net.Http.Headers;
+using fluxPay.DTOs.AuthDtos;
 
 namespace fluxPay.Services
 {
@@ -121,6 +122,11 @@ namespace fluxPay.Services
             }
         }
 
+        public Task<FineractApiResponse> CreateSavingAccount(CreateSavingsAccountRequestDto createSavingsAccountRequestDto)
+        {
+            throw new NotImplementedException();
+        }
+
         public async Task<FineractApiResponse> GetClientAsync(int clientId)
         {
             var requestUri = $"/fineract-provider/api/v1/clients/{clientId}";
@@ -209,9 +215,10 @@ namespace fluxPay.Services
 
 public enum AccountType
 {
-    Savings,
-    Deposit,
-    Loan
+    Agent_account,
+    Paystore_account,
+    Merchant_account,
+    Customer_account
     // Add other account types as needed
 }
 

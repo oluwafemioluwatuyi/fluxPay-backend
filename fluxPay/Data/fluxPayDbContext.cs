@@ -8,6 +8,6 @@ namespace fluxPay.Data
         public fluxPayDbContext(DbContextOptions<fluxPayDbContext> options) : base(options)
         {
         }
-        public DbSet<User> Users { get; set; }
+        public DbSet<TempUser> TempUsers { get; set; }
     }
 }

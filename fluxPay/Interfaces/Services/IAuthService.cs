@@ -7,6 +7,7 @@ namespace fluxPay.Interfaces.Services
     {
         Task<object> Login(LoginRequestDto loginRequestDto);
         Task <ServiceResponse<string>> Register(RegisterRequestDto registerRequestDto);
+        Task <ServiceResponse<string>> FinializeRegister(RegisterRequestDto registerRequestDto);
         Task <ServiceResponse<string>> VerifyAndCreateUserProfile (string token, string email, string phoneNumber, RegisterRequestDto registerRequestDto);
         Task<object> VerifyEmail(VerifyEmailRequestDto verifyEmailRequestDto);
         Task<object> ResendEmailVerification(ResendEmailVerificationDto resendEmailVerificationDto);
