@@ -31,7 +31,7 @@ namespace fluxPay.Services
         private readonly Dictionary<string, OtpDto> _otpCache = new();
         private readonly IOtpService _otpService1;
 
-        public AuthService(IFineractApiService fineractApiService, ITempUserRepository tempUserRepository, IMapper mapper, IConfiguration configuration, IHttpContextAccessor httpContextAccessor, IEmailService emailService, IClientService clientService, OtpService otpService)
+        public AuthService(IFineractApiService fineractApiService, ITempUserRepository tempUserRepository, IMapper mapper, IConfiguration configuration, IHttpContextAccessor httpContextAccessor, IEmailService emailService, IClientService clientService, OtpService otpService, IOtpService otpService1)
         {
             _fineractApiService = fineractApiService;
             _configuration = configuration;
@@ -41,7 +41,7 @@ namespace fluxPay.Services
             _emailService = emailService;
             _clientService = clientService;
             _otpService = otpService;
-           // _otpService1 = otpService1;
+            _otpService1 = otpService1;
 
         }
        
@@ -90,7 +90,9 @@ namespace fluxPay.Services
                 PhoneNumber = registerRequestDto.PhoneNumber,
                 FirstName = registerRequestDto.FirstName,
                 LastName = registerRequestDto.LastName,
-                DateOfBirth = registerRequestDto.DateOfBirth
+                DateOfBirth = registerRequestDto.DateOfBirth,
+                IsEmailVerified = false, 
+                IsTokenVerified = false,
             };
 
             // Step 1: Email validation
@@ -139,7 +141,7 @@ namespace fluxPay.Services
             // Implement Face Recognition here if needed
 
             // Step 5: Sending OTP to user's email
-            var generatedToken = await SendOtpEmail(tempUser.Email);
+            var generatedToken = await _otpService1.RequestOtpAsync(tempUser.Email);
             if (generatedToken == null)
             {
                 return new ServiceResponse<string>(
@@ -148,6 +150,14 @@ namespace fluxPay.Services
                     "Error sending OTP.",
                     null);
             }
+
+                // Set the verification token and status
+        tempUser.VerificationToken = generatedToken.ToString();
+        tempUser.IsEmailVerified = false;
+        tempUser.Status = "Pending";
+
+        // Step 5: Save the TempUser to the database
+        await tempUserRepository.SaveChangesAsync(tempUser);
 
             return new ServiceResponse<string>(
                 ResponseStatus.Success,
@@ -219,18 +229,18 @@ namespace fluxPay.Services
         {
              // Step 1: Retrieve the temporary user data (after email verification)
             var tempUser = await _clientService.FindByEmailAsync(registerRequestDto.Email);
-            if (tempUser == null)
+            if (tempUser != null)
             {
                 return new ServiceResponse<string>(
-                    ResponseStatus.Error,
-                    AppStatusCodes.InvalidData,
-                    "User not found.",
+                    ResponseStatus.Processing,
+                    AppStatusCodes.Success,
+                    "Continue registration.",
                     null);
             }
 
             // Step 2: Set the password for the user (after email verification)
-            var hashedPassword = HashPassword(registerRequestDto.Password); // Assuming you have a password hashing function
-            tempUser.Password = hashedPassword;
+           // var hashedPassword = HashPassword(registerRequestDto.Password); // Assuming you have a password hashing function
+           // tempUser.Password = hashedPassword;
             // Step 3: Prepare the CreateClientRequestDto and call the Fineract API to create the client
             var createClientRequestDto = new CreateClientRequestDto
             {
@@ -528,7 +538,8 @@ namespace fluxPay.Services
         return new FineractApiResponse
         {
             Success = true,
-            Message = "OTP sent to email successfully."
+            Message = "OTP sent to email successfully.",
+            Data = otpCode,
         };
     }
     catch (Exception ex)

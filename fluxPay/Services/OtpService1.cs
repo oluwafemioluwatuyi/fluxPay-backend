@@ -27,7 +27,7 @@ namespace fluxPay.Services
         }
         public async Task<bool> RequestOtpAsync(string email)
         {
-             var url = $"/fineract-provider/api/v1/twofactor?deliveryMethod=sms&extendedToken=false";
+             var url = $"/fineract-provider/api/v1/twofactor?deliveryMethod=email&extendedToken=false";
 
         var requestBody = new
         {
@@ -58,28 +58,45 @@ namespace fluxPay.Services
 
         public async Task<bool> ValidateOtpEmailAsync(string email, string otp)
         {
-                var url =$"/fineract-provider/api/v1/twofactor/validate"; // Adjust endpoint for OTP validation
+            // Construct the URL with the token as a query parameter
+          var url = $"/fineract-provider/api/v1/twofactor/validate?token={otp}";
 
-            var requestBody = new
-            {
-                target = email,  // The phone number where OTP was sent
-                token = otp,           // The OTP entered by the user
-            };
+    try
+    {
+        // Send the POST request with the token in the query string
+        var response = await _fineractClient._client.PostAsync(url, null); // No body content
 
-            var jsonBody = JsonConvert.SerializeObject(requestBody);
-            var content = new StringContent(jsonBody, Encoding.UTF8, "application/json");
+        if (response.IsSuccessStatusCode)
+        {
+            // Parse the response to get the validFrom (and validTo) values
+            var responseContent = await response.Content.ReadAsStringAsync();
 
-            var response = await _fineractClient._client.PostAsync(url, content);
+            // Deserialize the response content into an object
+            var otpResponse = JsonConvert.DeserializeObject<otpResponse>(responseContent);
 
-            if (response.IsSuccessStatusCode)
-            {
-                // OTP validated successfully
-                return true;
-            }
+            // You can now access the validFrom and validTo fields in otpResponse
+            // if (otpResponse != null)
+            // {
+            //     Console.WriteLine($"OTP Valid From: {otpResponse.ValidFrom}");
+            //     Console.WriteLine($"OTP Valid To: {otpResponse.ValidTo}");
 
-            // Handle failure (e.g., invalid OTP, expired OTP)
-            return false;
+            //     // You can add additional logic here if needed
+            //     return true;
+            // }
         }
+
+        // Handle failure (e.g., invalid OTP, expired OTP)
+        Console.WriteLine("Invalid OTP or failed to validate.");
+        return false;
     }
+    catch (Exception ex)
+    {
+        // Handle exception
+        Console.WriteLine("Error: " + ex.Message);
+        return false;
+    }
+            
+        }
+}
 }
 

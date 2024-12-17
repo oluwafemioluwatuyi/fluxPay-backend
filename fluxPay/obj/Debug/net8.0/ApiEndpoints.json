@@ -1,6 +1,22 @@
 [
   {
     "ContainingType": "fluxPay.Controllers.AuthController",
+    "Method": "CompleteRegistration",
+    "RelativePath": "api/Auth/Finialize-registration",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "registerRequestDto",
+        "Type": "fluxPay.DTOs.AuthDtos.RegisterRequestDto",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "fluxPay.Controllers.AuthController",
     "Method": "Register",
     "RelativePath": "api/Auth/register",
     "HttpMethod": "POST",
@@ -10,6 +26,22 @@
       {
         "Name": "registerRequestDto",
         "Type": "fluxPay.DTOs.AuthDtos.RegisterRequestDto",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "fluxPay.Controllers.AuthController",
+    "Method": "VerifyEmail",
+    "RelativePath": "api/Auth/Verify-email",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "verifyEmailRequestDto",
+        "Type": "fluxPay.DTOs.AuthDtos.VerifyEmailRequestDto",
         "IsRequired": true
       }
     ],

@@ -9,14 +9,12 @@ namespace fluxPay.Controllers
     [Route("api/[controller]")]
     public class AuthController : ControllerBase
     {
-        private readonly AuthService _authService;
+        private readonly AuthService _authService; 
 
         public AuthController(AuthService authService)
         {
             _authService = authService;
         }
-
-
     
           [HttpPost("register")]
          public async Task<IActionResult> Register([FromBody] RegisterRequestDto registerRequestDto)
@@ -34,6 +32,31 @@ namespace fluxPay.Controllers
                     }
                     return StatusCode(201, new { Success = false, Message = "Successful." });            
         }
+
+        [HttpPost("Verify-email")]
+        public async Task<IActionResult> VerifyEmail([FromBody] VerifyEmailRequestDto verifyEmailRequestDto )
+        {
+            var result  = await _authService.VerifyEmail(verifyEmailRequestDto);
+            if(result is null)
+            {
+                 return BadRequest(new { Success = false, Message = "Invalid input data." });
+            }
+                 return StatusCode(201, new { Success = true, Message = "Successful." });            
+
+        }
+
+        [HttpPost("Finialize-registration")]
+       public async Task<IActionResult> CompleteRegistration([FromBody] RegisterRequestDto registerRequestDto)
+       {
+          var result = await _authService.FinializeRegister(registerRequestDto);
+            if(result is null)
+            {
+                 return BadRequest(new { Success = false, Message = "Invalid input data." });
+            }
+                 return StatusCode(201, new { Success = true, Message = "Successful." });            
+
+       }
+
 
     }
 }

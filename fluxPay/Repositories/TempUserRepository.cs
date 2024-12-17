@@ -38,8 +38,22 @@ namespace fluxPay.Repositories
 
         public async Task<TempUser> GetUserByEmail(string email)
         {
-           return await dbContext.TempUsers
-                         .FirstOrDefaultAsync(u => u.Email == email && u.Status == "Pending");
+            if (string.IsNullOrEmpty(email))
+    {
+        throw new ArgumentException("Email cannot be null or empty", nameof(email));
+    }
+
+    try
+    {
+        return await dbContext.TempUsers
+            .FirstOrDefaultAsync(u => u.Email == email && u.Status == "Pending");
+    }
+    catch (Exception ex)
+    {
+        // Log the error for debugging purposes
+        Console.WriteLine($"Error in GetUserByEmail: {ex.Message}");
+        throw;
+    }
         }
 
         public Task<TempUser> GetUserById(Guid id)
