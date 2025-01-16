@@ -5,9 +5,13 @@ namespace fluxPay.DTOs;
 
 public class CreateClientRequestDto
 {
-    public string Email { get; set; }
-    public string FirstName { get; set; }
-     public string LastName { get; set; }
-    public string Password { get; set; }
-
+    public string Firstname { get; set; }
+    public string Lastname { get; set; }
+    public int OfficeId { get; set; }
+    public bool Active { get; set; }
+    public string ActivationDate { get; set; }
+    public string DateFormat { get; set; }
+    public string Locale { get; set; }
+    public int LegalFormId { get; set; }
 }
+

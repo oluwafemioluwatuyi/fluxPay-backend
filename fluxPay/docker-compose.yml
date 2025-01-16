@@ -1,13 +1,27 @@
+version: "3.8"
 services:
+  keycloak:
+    image: quay.io/keycloak/keycloak:latest
+    container_name: keycloak
+    environment:
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+    ports:
+      - "8080:8080"
+    command:
+      - start-dev
+
   mssql:
     image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: mssql
     environment:
       - ACCEPT_EULA=Y
       - MSSQL_SA_PASSWORD=Password123#
       - MSSQL_PID=Developer
     ports:
-      - 1433:1433
+      - "1433:1433"
     volumes:
       - mssqldata:/var/opt/mssql
+
 volumes:
   mssqldata:

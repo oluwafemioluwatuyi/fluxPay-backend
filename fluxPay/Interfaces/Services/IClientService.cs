@@ -6,6 +6,7 @@ namespace fluxPay.Interfaces.Services
 {
     public interface IClientService
     {
+        
         Task<ClientDto> FindByEmailAsync(string mail);
         Task<object> FindByPhoneNumberAsync(string phoneNumber);
         Task<OtpConfigDto> GetOtpConfigureFromDb();

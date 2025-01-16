@@ -17,15 +17,15 @@
   },
   {
     "ContainingType": "fluxPay.Controllers.AuthController",
-    "Method": "Register",
-    "RelativePath": "api/Auth/register",
+    "Method": "Login",
+    "RelativePath": "api/Auth/Login",
     "HttpMethod": "POST",
     "IsController": true,
     "Order": 0,
     "Parameters": [
       {
-        "Name": "registerRequestDto",
-        "Type": "fluxPay.DTOs.AuthDtos.RegisterRequestDto",
+        "Name": "loginRequestDto",
+        "Type": "fluxPay.DTOs.AuthDtos.LoginRequestDto",
         "IsRequired": true
       }
     ],
@@ -33,15 +33,47 @@
   },
   {
     "ContainingType": "fluxPay.Controllers.AuthController",
-    "Method": "VerifyEmail",
-    "RelativePath": "api/Auth/Verify-email",
+    "Method": "RegisterUser",
+    "RelativePath": "api/Auth/registerUser",
     "HttpMethod": "POST",
     "IsController": true,
     "Order": 0,
     "Parameters": [
       {
-        "Name": "verifyEmailRequestDto",
-        "Type": "fluxPay.DTOs.AuthDtos.VerifyEmailRequestDto",
+        "Name": "registerRequestDto1",
+        "Type": "fluxPay.DTOs.AuthDtos.RegisterRequestDto1",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "FluxPay.Controllers.TransferController",
+    "Method": "ExecuteWalletTransfer",
+    "RelativePath": "api/Transfer/wallet-transfer",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "transferRequest",
+        "Type": "WalletTransferRequestDto",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "FluxPay.Controllers.WebhookController",
+    "Method": "HandleWebhook",
+    "RelativePath": "api/Webhook/webhook",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "payload",
+        "Type": "WebhookEventPayload",
         "IsRequired": true
       }
     ],

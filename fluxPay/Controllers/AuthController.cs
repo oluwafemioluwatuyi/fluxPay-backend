@@ -1,5 +1,6 @@
 using fluxPay.DTOs;
 using fluxPay.DTOs.AuthDtos;
+using fluxPay.Interfaces.Services;
 using fluxPay.Services;
 using Microsoft.AspNetCore.Mvc;
 
@@ -9,53 +10,72 @@ namespace fluxPay.Controllers
     [Route("api/[controller]")]
     public class AuthController : ControllerBase
     {
-        private readonly AuthService _authService; 
+        private readonly AuthService _authService;
+        private readonly IKeyCloak _keyCloak;
 
-        public AuthController(AuthService authService)
+        public AuthController(AuthService authService, IKeyCloak keyCloak)
         {
             _authService = authService;
-        }
-    
-          [HttpPost("register")]
-         public async Task<IActionResult> Register([FromBody] RegisterRequestDto registerRequestDto)
-        {
-                if (registerRequestDto == null)
-                {
-                    return BadRequest(new { Success = false, Message = "Invalid input data." });
-                }
-                    // Call the service to handle the registration process
-                    var result = await _authService.Register(registerRequestDto);  
-                    if(result is null)
-                    {
-                        return BadRequest(new { Success = false, Message = "Invalid input data." });
-
-                    }
-                    return StatusCode(201, new { Success = false, Message = "Successful." });            
+            _keyCloak = keyCloak;
         }
 
-        [HttpPost("Verify-email")]
-        public async Task<IActionResult> VerifyEmail([FromBody] VerifyEmailRequestDto verifyEmailRequestDto )
+        [HttpPost("registerUser")]
+        public async Task<IActionResult> RegisterUser([FromBody] RegisterRequestDto1 registerRequestDto1)
         {
-            var result  = await _authService.VerifyEmail(verifyEmailRequestDto);
-            if(result is null)
+            if (registerRequestDto1 == null)
             {
-                 return BadRequest(new { Success = false, Message = "Invalid input data." });
+                return BadRequest(new { Success = false, Message = "Invalid input data." });
             }
-                 return StatusCode(201, new { Success = true, Message = "Successful." });            
+            // Call the service to handle the registration process
+            await _keyCloak.CreateUser(registerRequestDto1);
+            // if (result is null)
+            // {
+            //     return BadRequest(new { Success = false, Message = "Invalid input data." });
+
+            // }
+            return StatusCode(201, new { Success = false, Message = "Successful." });
+        }
+
+        // [HttpPost("register")]
+        // public async Task<IActionResult> Register([FromBody] RegisterRequestDto registerRequestDto)
+        // {
+        //     if (registerRequestDto == null)
+        //     {
+        //         return BadRequest(new { Success = false, Message = "Invalid input data." });
+        //     }
+        //     // Call the service to handle the registration process
+        //     var result = await _authService.Register(registerRequestDto);
+        //     if (result is null)
+        //     {
+        //         return BadRequest(new { Success = false, Message = "Invalid input data." });
+
+        //     }
+        //     return StatusCode(201, new { Success = false, Message = "Successful." });
+        // }
+
+        [HttpPost("Login")]
+        public async Task<IActionResult> Login([FromBody] LoginRequestDto loginRequestDto)
+        {
+            var result = await _keyCloak.Login(loginRequestDto);
+            if (result is null)
+            {
+                return BadRequest(new { Success = false, Message = "Invalid input data." });
+            }
+            return StatusCode(201, new { Success = true, Message = "Successful.", Data = result });
 
         }
 
         [HttpPost("Finialize-registration")]
-       public async Task<IActionResult> CompleteRegistration([FromBody] RegisterRequestDto registerRequestDto)
-       {
-          var result = await _authService.FinializeRegister(registerRequestDto);
-            if(result is null)
+        public async Task<IActionResult> CompleteRegistration([FromBody] RegisterRequestDto registerRequestDto)
+        {
+            var result = await _authService.FinializeRegister(registerRequestDto);
+            if (result is null)
             {
-                 return BadRequest(new { Success = false, Message = "Invalid input data." });
+                return BadRequest(new { Success = false, Message = "Invalid input data." });
             }
-                 return StatusCode(201, new { Success = true, Message = "Successful." });            
+            return StatusCode(201, new { Success = true, Message = "Successful.", Data = result });
 
-       }
+        }
 
 
     }

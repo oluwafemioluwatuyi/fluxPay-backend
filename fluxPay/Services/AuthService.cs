@@ -3,8 +3,10 @@ using fluxPay.Constants;
 using fluxPay.DTOs;
 using fluxPay.DTOs.AuthDtos;
 using fluxPay.Helpers;
+using fluxPay.Interfaces;
 using fluxPay.Interfaces.Repositories;
 using fluxPay.Interfaces.Services;
+using fluxPay.Utils;
 using FluxPay.Models;
 using FluxPay.Utils;
 using Microsoft.Extensions.Configuration;
@@ -31,7 +33,9 @@ namespace fluxPay.Services
         private readonly Dictionary<string, OtpDto> _otpCache = new();
         private readonly IOtpService _otpService1;
 
-        public AuthService(IFineractApiService fineractApiService, ITempUserRepository tempUserRepository, IMapper mapper, IConfiguration configuration, IHttpContextAccessor httpContextAccessor, IEmailService emailService, IClientService clientService, OtpService otpService, IOtpService otpService1)
+        private readonly IConstants _constants;
+
+        public AuthService(IFineractApiService fineractApiService, ITempUserRepository tempUserRepository, IMapper mapper, IConfiguration configuration, IHttpContextAccessor httpContextAccessor, IEmailService emailService, IClientService clientService, OtpService otpService, IOtpService otpService1, IConstants constants)
         {
             _fineractApiService = fineractApiService;
             _configuration = configuration;
@@ -42,39 +46,40 @@ namespace fluxPay.Services
             _clientService = clientService;
             _otpService = otpService;
             _otpService1 = otpService1;
+            _constants = constants;
 
         }
-       
+
         public async Task<object> Login(LoginRequestDto loginRequestDto)
         {
             // Step 1: Check username and password
-        var user = await _clientService.FindByEmailAsync(loginRequestDto.Username);
-        if (user == null)
-        {
-            return "Invalid username or password";
-        }
-        // Step 2: Send OTP (if 2FA is enabled)
-        //   var otpSent = await _otpService1.RequestOtpAsync(loginRequestDto.Email);
-        // if (!otpSent)
-        // {
-        //     return "Failed to send OTP. Please try again.";
-        // }
+            var user = await _clientService.FindByEmailAsync(loginRequestDto.UserName);
+            if (user == null)
+            {
+                return "Invalid username or password";
+            }
+            // Step 2: Send OTP (if 2FA is enabled)
+            //   var otpSent = await _otpService1.RequestOtpAsync(loginRequestDto.Email);
+            // if (!otpSent)
+            // {
+            //     return "Failed to send OTP. Please try again.";
+            // }
 
-        // // Step 3: Validate OTP
-        // var isOtpValid = await _otpService1.ValidateOtpEmailAsync(loginRequestDto.Email, loginRequestDto.Otp);
-        // if (!isOtpValid)
-        // {
-        //     return "Invalid OTP. Please try again.";
-        // }
-         return new ServiceResponse<string>(
-                        ResponseStatus.Error,
-                        AppStatusCodes. EmailNotVerified,
-                        "Invalid request.",
-                        null);
+            // // Step 3: Validate OTP
+            // var isOtpValid = await _otpService1.ValidateOtpEmailAsync(loginRequestDto.Email, loginRequestDto.Otp);
+            // if (!isOtpValid)
+            // {
+            //     return "Invalid OTP. Please try again.";
+            // }
+            return new ServiceResponse<string>(
+                           ResponseStatus.Error,
+                           AppStatusCodes.EmailNotVerified,
+                           "Invalid request.",
+                           null);
         }
         public async Task<ServiceResponse<string>> Register(RegisterRequestDto registerRequestDto)
         {
-                        if (registerRequestDto == null)
+            if (registerRequestDto == null)
             {
                 return new ServiceResponse<string>(
                     ResponseStatus.Error,
@@ -91,8 +96,7 @@ namespace fluxPay.Services
                 FirstName = registerRequestDto.FirstName,
                 LastName = registerRequestDto.LastName,
                 DateOfBirth = registerRequestDto.DateOfBirth,
-                IsEmailVerified = false, 
-                IsTokenVerified = false,
+                IsEmailVerified = false
             };
 
             // Step 1: Email validation
@@ -136,37 +140,42 @@ namespace fluxPay.Services
                         null);
                 }
             }
+            // set verification data
+            // var emailVerificationToken = RandomCharacterGenerator.GenerateRandomString(_constants.EMAIL_VERIFICATION_TOKEN_LENGTH);
+            // tempUser.EmailVerificationTokenExpiration = DateTime.UtcNow.AddMinutes(_constants.EMAIL_VERIFICATION_TOKEN_EXPIRATION_TIME);
+            // var hashEmailVerification = ComputeHash.GenerateHash(emailVerificationToken);
+            // tempUser.EmailVerificationToken = hashEmailVerification;
 
             // Step 4: Face Recognition (if required)
             // Implement Face Recognition here if needed
 
             // Step 5: Sending OTP to user's email
-            var generatedToken = await _otpService1.RequestOtpAsync(tempUser.Email);
-            if (generatedToken == null)
-            {
-                return new ServiceResponse<string>(
-                    ResponseStatus.Error,
-                    AppStatusCodes.EmailNotVerified,
-                    "Error sending OTP.",
-                    null);
-            }
+            // var generatedToken = await _emailService.SendOtpEmailAsync(tempUser.Email, "Your OTP Verification", "EmailVerification", new { Name = tempUser.FirstName });
+            // if (generatedToken == null)
+            // {
+            //     return new ServiceResponse<string>(
+            //         ResponseStatus.Error,
+            //         AppStatusCodes.EmailNotVerified,
+            //         "Error sending OTP.",
+            //         null);
+            // }
 
-                // Set the verification token and status
-        tempUser.VerificationToken = generatedToken.ToString();
-        tempUser.IsEmailVerified = false;
-        tempUser.Status = "Pending";
+            // Set the verification token and status
+            // tempUser.VerificationToken = generatedToken.ToString();
+            // tempUser.IsEmailVerified = false;
+            // tempUser.Status = "Pending";
 
-        // Step 5: Save the TempUser to the database
-        await tempUserRepository.SaveChangesAsync(tempUser);
+            // Step 5: Save the TempUser to the database
+            await tempUserRepository.SaveChangesAsync(tempUser);
 
             return new ServiceResponse<string>(
                 ResponseStatus.Success,
                 AppStatusCodes.EmailNotVerified,
                 "Token sent successfully.",
-                null);   
-}
+                null);
+        }
 
-         public Task<ServiceResponse<string>> VerifyAndCreateUserProfile(string token, string email, string phoneNumber, RegisterRequestDto registerRequestDto)
+        public Task<ServiceResponse<string>> VerifyAndCreateUserProfile(string token, string email, string phoneNumber, RegisterRequestDto registerRequestDto)
         {
             throw new NotImplementedException();
         }
@@ -174,7 +183,7 @@ namespace fluxPay.Services
         public async Task<object> VerifyEmail(VerifyEmailRequestDto verifyEmailRequestDto)
         {
             // Validate the input
-                if (string.IsNullOrEmpty(verifyEmailRequestDto.Email) || string.IsNullOrEmpty(verifyEmailRequestDto.Token))
+            if (string.IsNullOrEmpty(verifyEmailRequestDto.Email) || string.IsNullOrEmpty(verifyEmailRequestDto.Token))
             {
                 return new ServiceResponse<string>(
                     ResponseStatus.Error,
@@ -183,31 +192,31 @@ namespace fluxPay.Services
                     null);
             }
             // Step 1: Find the user by email (temporary check)
-        var tempUser = await tempUserRepository.GetUserByEmail(verifyEmailRequestDto.Email);  // Query your tempUser store/database
-        if (tempUser is null)
-        {
-            return new ServiceResponse<string>(
-                ResponseStatus.Error,
-                AppStatusCodes.InvalidData,
-                "User not found with the provided email.",
-                null);
-        }
-        // Step 3: Verify email
+            var tempUser = await tempUserRepository.GetUserByEmail(verifyEmailRequestDto.Email);  // Query your tempUser store/database
+            if (tempUser is null)
+            {
+                return new ServiceResponse<string>(
+                    ResponseStatus.Error,
+                    AppStatusCodes.InvalidData,
+                    "User not found with the provided email.",
+                    null);
+            }
+            // Step 3: Verify email
             //Call the service method to validate the OTP
             var isOtpValid = await _otpService1.ValidateOtpEmailAsync(verifyEmailRequestDto.Email, verifyEmailRequestDto.Token);
 
             if (!isOtpValid)
             {
-                 return new ServiceResponse<string>(
-                            ResponseStatus.BadRequest,
-                            AppStatusCodes.InvalidData,
-                            "Token incorrect.",
-                            null);
+                return new ServiceResponse<string>(
+                           ResponseStatus.BadRequest,
+                           AppStatusCodes.InvalidData,
+                           "Token incorrect.",
+                           null);
             }
-              tempUser.IsEmailVerified = true;  // Mark the email as verified
-              tempUser.VerificationToken = null;
-             // Step 4: Update the user in your database (or temporary store)
-        var updateResult = await tempUserRepository.SaveChangesAsync(tempUser);  // Update the user object in your store
+            tempUser.IsEmailVerified = true;  // Mark the email as verified
+            //tempUser.EmailVerificationToken = null;
+            // Step 4: Update the user in your database (or temporary store)
+            var updateResult = await tempUserRepository.SaveChangesAsync(tempUser);  // Update the user object in your store
             if (!updateResult)
             {
                 return new ServiceResponse<string>(
@@ -217,21 +226,21 @@ namespace fluxPay.Services
                     null);
             }
 
-        return new ServiceResponse<string>(
-            ResponseStatus.Success,
-            AppStatusCodes.Success,
-            "Email successfully verified.",
-            null);
-      
-    }
+            return new ServiceResponse<string>(
+                ResponseStatus.Success,
+                AppStatusCodes.Success,
+                "Email successfully verified.",
+                null);
 
-       public async Task<ServiceResponse<string>> FinializeRegister(RegisterRequestDto registerRequestDto)
+        }
+
+        public async Task<ServiceResponse<SavingsAccountResponseDto>> FinializeRegister(RegisterRequestDto registerRequestDto)
         {
-             // Step 1: Retrieve the temporary user data (after email verification)
-            var tempUser = await _clientService.FindByEmailAsync(registerRequestDto.Email);
-            if (tempUser != null)
+            // Step 1: Retrieve the temporary user data (after email verification)
+            var tempUser = await tempUserRepository.GetUserByEmail(registerRequestDto.Email);
+            if (tempUser is null)
             {
-                return new ServiceResponse<string>(
+                return new ServiceResponse<SavingsAccountResponseDto>(
                     ResponseStatus.Processing,
                     AppStatusCodes.Success,
                     "Continue registration.",
@@ -239,101 +248,109 @@ namespace fluxPay.Services
             }
 
             // Step 2: Set the password for the user (after email verification)
-           // var hashedPassword = HashPassword(registerRequestDto.Password); // Assuming you have a password hashing function
-           // tempUser.Password = hashedPassword;
+            // var hashedPassword = HashPassword(registerRequestDto.Password); // Assuming you have a password hashing function
+            // tempUser.Password = hashedPassword;
             // Step 3: Prepare the CreateClientRequestDto and call the Fineract API to create the client
             var createClientRequestDto = new CreateClientRequestDto
             {
-                Email = tempUser.Email,
-                FirstName = tempUser.FirstName,
-                LastName = tempUser.LastName,
-                Password = tempUser.Password,
-                // Add any other fields required by Fineract
+                Firstname = tempUser.FirstName,
+                Lastname = tempUser.LastName,
+                OfficeId = 1,
+                Active = true,
+                ActivationDate = "04 March 2009",
+                DateFormat = "dd MMMM yyyy",
+                Locale = "en",
+                LegalFormId = 1
             };
 
-            var createClient= await _fineractApiService.CreateClientAsync(createClientRequestDto);
+            // Send this data to your API or backend service to create the client.
+
+            var createClient = await _fineractApiService.CreateClientAsync(createClientRequestDto);
             if (createClient is null)
             {
-                return new ServiceResponse<string>(
+                return new ServiceResponse<SavingsAccountResponseDto>(
                     ResponseStatus.Error,
                     AppStatusCodes.InvalidData,
                     "Error creating client account.",
                     null);
             }
-                // Step 4: Determine Savings Product ID based on Account Type
+            var clientId = createClient.clientId;
+            // Step 4: Determine Savings Product ID based on Account Type
             int savingsProductId = registerRequestDto.accountType switch
             {
                 AccountType.Customer_account => 1,
                 AccountType.Agent_account => 2,   // Agent account has productId 4
                 AccountType.Merchant_account => 3, // Merchant account has productId 5
-                AccountType.Paystore_account=> 4, // Corporate account has productId 6
+                AccountType.Paystore_account => 4, // Corporate account has productId 6
                 _ => 1 // Default productId for Standard account
             };
 
             // Step 5: Create Savings Account based on Account Type
             var createSavingsAccountRequest = new CreateSavingsAccountRequestDto
             {
-                clientId = tempUser.Id, // Assuming tempUser has an Id property after client creation
+                clientId = clientId, // Assuming tempUser has an Id property after client creation
                 productId = savingsProductId,
-                Locale = "en",
-                DateFormat = "dd MMMM yyyy",
-                SubmittedOnDate = "01 March 2011" // Example, use actual registration date
+                locale = "en",
+                dateFormat = "dd MMMM yyyy",
+                submittedOnDate = "01 March 2011" // Example, use actual registration date
             };
 
             var createSavingAccountResponse = await _fineractApiService.CreateSavingAccount(createSavingsAccountRequest);
             if (createSavingAccountResponse is null)
             {
-                return new ServiceResponse<string>(
+                return new ServiceResponse<SavingsAccountResponseDto>(
                     ResponseStatus.Error,
                     AppStatusCodes.InvalidData,
-                    "Error creating saving account.",
+                    "Error creating savings account.",
                     null);
             }
+            {
 
-            return new ServiceResponse<string>(
-                ResponseStatus.Success,
-                AppStatusCodes.Success,
-                "Registration complete and accounts created successfully.",
-                null);
+                return new ServiceResponse<SavingsAccountResponseDto>(
+                    ResponseStatus.Success,
+                    AppStatusCodes.Success,
+                    "Registration complete and accounts created successfully.",
+                   createSavingAccountResponse);
+            }
         }
         public async Task<object> ResendEmailVerification(ResendEmailVerificationDto resendEmailVerificationDto)
         {
-             // Step 1: Check if user exists by email
-        var user = await _clientService.FindByEmailAsync(resendEmailVerificationDto.Email);
-        if (user == null)
-        {
+            // Step 1: Check if user exists by email
+            var user = await _clientService.FindByEmailAsync(resendEmailVerificationDto.Email);
+            if (user == null)
+            {
+                return new ServiceResponse<string>(
+                    ResponseStatus.Error,
+                    AppStatusCodes.InvalidData,
+                    "User with the provided email does not exist.",
+                    null);
+            }
+
+            // Step 2: Check if email is already verified
+            // if (user.EmailVerified)
+            // {
+            //     return new ServiceResponse<string>(
+            //         ResponseStatus.Error,
+            //         AppStatusCodes.EmailNotVerified,
+            //         "Email has already been verified.",
+            //         null);
+            // }
+
+            // Step 3: Generate verification token (this can be a unique token generation logic)
+            //   var generatedToken = await _otpService1.RequestOtpAsync(resendEmailVerificationDto.Email);
+            //      if(generatedToken is false)
+            //     return new ServiceResponse<string>(
+            //                     ResponseStatus.Error,
+            //                     AppStatusCodes. EmailNotVerified,
+            //                     "Invalid request.",
+            //                     null);
+
+            // Step 5: Return success response
             return new ServiceResponse<string>(
-                ResponseStatus.Error,
-                AppStatusCodes.InvalidData,
-                "User with the provided email does not exist.",
+                ResponseStatus.Success,
+                AppStatusCodes.Success,
+                "Verification email sent successfully.",
                 null);
-        }
-
-        // Step 2: Check if email is already verified
-        // if (user.EmailVerified)
-        // {
-        //     return new ServiceResponse<string>(
-        //         ResponseStatus.Error,
-        //         AppStatusCodes.EmailNotVerified,
-        //         "Email has already been verified.",
-        //         null);
-        // }
-
-        // Step 3: Generate verification token (this can be a unique token generation logic)
-        //   var generatedToken = await _otpService1.RequestOtpAsync(resendEmailVerificationDto.Email);
-        //      if(generatedToken is false)
-        //     return new ServiceResponse<string>(
-        //                     ResponseStatus.Error,
-        //                     AppStatusCodes. EmailNotVerified,
-        //                     "Invalid request.",
-        //                     null);
-
-        // Step 5: Return success response
-        return new ServiceResponse<string>(
-            ResponseStatus.Success,
-            AppStatusCodes.Success,
-            "Verification email sent successfully.",
-            null);
         }
 
         public Task<object> ForgotPassword(ForgotPasswordRequestDto forgotPasswordRequestDto)
@@ -361,8 +378,8 @@ namespace fluxPay.Services
             throw new NotImplementedException();
         }
         public Task<object> DisableTwoFactorAuthentication()
-         { 
-            throw new NotImplementedException(); 
+        {
+            throw new NotImplementedException();
         }
 
         public Task<object> EnableTwoFactorAuthentication(EnableTwoFactorAuthenticationRequestDto enableTwoFactorAuthenticationRequestDto)
@@ -375,32 +392,32 @@ namespace fluxPay.Services
             throw new NotImplementedException();
         }
 
-        
+
         private async Task SendVerificationMail(TempUser user, string emailVerificationToken)
 
-                
+
         {
             try
+            {
+                await _emailService.SendEmailAsync(user.Email, "Verify your email", "VerifyEmail", new
                 {
-                    await _emailService.SendEmailAsync(user.Email, "Verify your email", "VerifyEmail", new
-                    {
-                        FrontendBaseUrl = "http://example.com", // Replace with your actual frontend URL when ready
-                        EmailVerificationToken = emailVerificationToken,
-                        UserId = user.Id,
-                        Email = user.Email
-                    });
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"Error sending verification email to {user.Email}: {ex.Message}");
-                }
-         }
-    
-              
-            public string GenerateEmailVerificationToken(TempUser user)          
-         {
-             
-             List<Claim> claims = new List<Claim>{
+                    FrontendBaseUrl = "http://example.com", // Replace with your actual frontend URL when ready
+                    EmailVerificationToken = emailVerificationToken,
+                    UserId = user.Id,
+                    Email = user.Email
+                });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error sending verification email to {user.Email}: {ex.Message}");
+            }
+        }
+
+
+        public string GenerateEmailVerificationToken(TempUser user)
+        {
+
+            List<Claim> claims = new List<Claim>{
             new Claim(ClaimTypes.Email, user.Email),
             new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
             };
@@ -429,7 +446,7 @@ namespace fluxPay.Services
             var jwt = new JwtSecurityTokenHandler().WriteToken(token);
 
             return jwt;
-         }
+        }
 
         private string HashPassword(string password)
         {
@@ -441,8 +458,8 @@ namespace fluxPay.Services
 
             return BCrypt.Net.BCrypt.Verify(password, passwordHash);
         }
-         
-            private async Task<(bool, string)> VerifyPassport(VerifyPassportDto verifyPassportDto)
+
+        private async Task<(bool, string)> VerifyPassport(VerifyPassportDto verifyPassportDto)
         {
             var message = "Passport verified successfully";
 
@@ -497,64 +514,64 @@ namespace fluxPay.Services
 
         public async Task<FineractApiResponse> SendOtpEmail(string email)
         {
-     try
-    {
-        // Step 1: Fetch OTP configuration from the Fineract database
-        var otpConfig = await _clientService.GetOtpConfigureFromDb();
+            try
+            {
+                // Step 1: Fetch OTP configuration from the Fineract database
+                var otpConfig = await _clientService.GetOtpConfigureFromDb();
 
-        // Step 2: Generate OTP using the length from the configuration
-        var otpCode = _otpService.GenerateOtpCode(otpConfig.OtpTokenLength);
+                // Step 2: Generate OTP using the length from the configuration
+                var otpCode = _otpService.GenerateOtpCode(otpConfig.OtpTokenLength);
 
-        // Step 3: Cache OTP with expiry time
-        var expiryDate = DateTime.UtcNow.AddSeconds(otpConfig.OtpTokenExpiryTime);
+                // Step 3: Cache OTP with expiry time
+                var expiryDate = DateTime.UtcNow.AddSeconds(otpConfig.OtpTokenExpiryTime);
 
-        var otpDto = new OtpDto
-        {
-            Code = otpCode,
-            ExpirationTime = expiryDate,
-            IsValid = true,
-            OtpType = "Login",
-            GeneratedAt = DateTime.UtcNow
-        };
+                var otpDto = new OtpDto
+                {
+                    Code = otpCode,
+                    ExpirationTime = expiryDate,
+                    IsValid = true,
+                    OtpType = "Login",
+                    GeneratedAt = DateTime.UtcNow
+                };
 
-        // Assuming _otpCache is implemented properly (e.g., IMemoryCache or a distributed cache)
-        _otpCache[email] = otpDto;
+                // Assuming _otpCache is implemented properly (e.g., IMemoryCache or a distributed cache)
+                _otpCache[email] = otpDto;
 
-        // Step 4: Prepare the email content
-        var subject = otpConfig.OtpSubjectTemplate;
-        var body = otpConfig.OtpBodyTemplate
-            .Replace("{{token}}", otpCode)
-            .Replace("{{expiryTime}}", (otpConfig.OtpTokenExpiryTime / 60).ToString());
+                // Step 4: Prepare the email content
+                var subject = otpConfig.OtpSubjectTemplate;
+                var body = otpConfig.OtpBodyTemplate
+                    .Replace("{{token}}", otpCode)
+                    .Replace("{{expiryTime}}", (otpConfig.OtpTokenExpiryTime / 60).ToString());
 
-        var emailModel = new OtpEmailModel
-        {
-            Token = otpCode,
-            ExpiryTimeInMinutes = otpConfig.OtpTokenExpiryTime / 60
-        };
+                var emailModel = new OtpEmailModel
+                {
+                    Token = otpCode,
+                    ExpiryTimeInMinutes = otpConfig.OtpTokenExpiryTime / 60
+                };
 
-        // Step 5: Send the email
-        await _emailService.SendOtpEmailAsync(email, subject, body, emailModel);
+                // Step 5: Send the email
+                await _emailService.SendOtpEmailAsync(email, subject, body, emailModel);
 
-        return new FineractApiResponse
-        {
-            Success = true,
-            Message = "OTP sent to email successfully.",
-            Data = otpCode,
-        };
-    }
-    catch (Exception ex)
-    {
-        // Log exception for troubleshooting (if logging is implemented)
-        // _logger.LogError(ex, "Error while sending OTP email");
+                return new FineractApiResponse
+                {
+                    Success = true,
+                    Message = "OTP sent to email successfully.",
+                    Data = otpCode,
+                };
+            }
+            catch (Exception ex)
+            {
+                // Log exception for troubleshooting (if logging is implemented)
+                // _logger.LogError(ex, "Error while sending OTP email");
 
-        return new FineractApiResponse
-        {
-            Success = false,
-            Message = $"Error generating OTP or sending email: {ex.Message}"
-        };
-    }
+                return new FineractApiResponse
+                {
+                    Success = false,
+                    Message = $"Error generating OTP or sending email: {ex.Message}"
+                };
+            }
 
-   }
+        }
 
     }
 }

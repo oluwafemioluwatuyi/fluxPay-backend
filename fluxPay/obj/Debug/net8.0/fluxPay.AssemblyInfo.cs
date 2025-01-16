@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("fluxPay")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+a91803ad993dec7e471d151d2a78ef0dc9757ba5")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+6f638440b80e5d12c560d4b3bacbaf0799e6c7ef")]
 [assembly: System.Reflection.AssemblyProductAttribute("fluxPay")]
 [assembly: System.Reflection.AssemblyTitleAttribute("fluxPay")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
