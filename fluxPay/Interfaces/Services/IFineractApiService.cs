@@ -14,6 +14,10 @@ public interface IFineractApiService
     Task<ClientApiResponse> CreateClientAsync(CreateClientRequestDto createClientRequestDto);
     Task<SavingsAccountResponseDto> CreateSavingAccount(CreateSavingsAccountRequestDto createSavingsAccountRequestDto);
     Task<FineractApiResponse> GetClientAsync(int clientId);
+    Task<SavingsAccountResponseDto> GetCustomerWalletAsync(Guid customerId);
+    Task<SavingsAccountResponseDto> GetAgentWalletAsync(long AccountId);
+    Task DebitAsync(long accountId, TransferDto transferDto);
+    Task CreditAsync(long accountId, TransferDto transferDto);
 
     Task<SmtpSettings> GetSmtpAsync();
 

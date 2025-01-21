@@ -21,5 +21,6 @@ public enum AppStatusCodes
     InsufficientFunds = 0014,
     InvalidOperation = 0015,
     InvalidData = 0016,
+    InvalidAccountNumber = 0017,
     InternalServerError = 9999,
 }

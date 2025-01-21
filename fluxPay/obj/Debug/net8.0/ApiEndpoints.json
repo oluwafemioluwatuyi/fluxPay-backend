@@ -49,15 +49,15 @@
   },
   {
     "ContainingType": "FluxPay.Controllers.TransferController",
-    "Method": "ExecuteWalletTransfer",
+    "Method": "WalletTransfer",
     "RelativePath": "api/Transfer/wallet-transfer",
     "HttpMethod": "POST",
     "IsController": true,
     "Order": 0,
     "Parameters": [
       {
-        "Name": "transferRequest",
-        "Type": "WalletTransferRequestDto",
+        "Name": "transferToWalletRequestDto",
+        "Type": "TransferToWalletRequestDto",
         "IsRequired": true
       }
     ],

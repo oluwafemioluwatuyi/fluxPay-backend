@@ -18,7 +18,11 @@
           "Microsoft.EntityFrameworkCore.Tools": "9.0.0",
           "MySql.Data": "9.1.0",
           "Newtonsoft.Json": "13.0.3",
-          "Swashbuckle.AspNetCore": "6.6.2"
+          "QRCoder": "1.6.0",
+          "Swashbuckle.AspNetCore": "6.6.2",
+          "System.Drawing.Common": "9.0.1",
+          "ZXing.Net": "0.16.9",
+          "ZXing.Net.Bindings.Windows.Compatibility": "0.16.12"
         },
         "runtime": {
           "fluxPay.dll": {}
@@ -821,6 +825,22 @@
           }
         }
       },
+      "Microsoft.Win32.SystemEvents/9.0.1": {
+        "runtime": {
+          "lib/net8.0/Microsoft.Win32.SystemEvents.dll": {
+            "assemblyVersion": "9.0.0.0",
+            "fileVersion": "9.0.124.61010"
+          }
+        },
+        "runtimeTargets": {
+          "runtimes/win/lib/net8.0/Microsoft.Win32.SystemEvents.dll": {
+            "rid": "win",
+            "assetType": "runtime",
+            "assemblyVersion": "9.0.0.0",
+            "fileVersion": "9.0.124.61010"
+          }
+        }
+      },
       "Mono.TextTemplating/3.0.0": {
         "dependencies": {
           "System.CodeDom": "6.0.0"
@@ -887,6 +907,14 @@
           "lib/net6.0/Newtonsoft.Json.dll": {
             "assemblyVersion": "13.0.0.0",
             "fileVersion": "13.0.3.27908"
+          }
+        }
+      },
+      "QRCoder/1.6.0": {
+        "runtime": {
+          "lib/net6.0/QRCoder.dll": {
+            "assemblyVersion": "1.6.0.0",
+            "fileVersion": "1.6.0.0"
           }
         }
       },
@@ -1031,6 +1059,21 @@
         }
       },
       "System.Diagnostics.EventLog/8.0.0": {},
+      "System.Drawing.Common/9.0.1": {
+        "dependencies": {
+          "Microsoft.Win32.SystemEvents": "9.0.1"
+        },
+        "runtime": {
+          "lib/net8.0/System.Drawing.Common.dll": {
+            "assemblyVersion": "9.0.0.0",
+            "fileVersion": "9.0.124.61006"
+          },
+          "lib/net8.0/System.Private.Windows.Core.dll": {
+            "assemblyVersion": "9.0.0.0",
+            "fileVersion": "9.0.124.61006"
+          }
+        }
+      },
       "System.Formats.Asn1/9.0.0": {
         "runtime": {
           "lib/net8.0/System.Formats.Asn1.dll": {
@@ -1227,6 +1270,26 @@
           "lib/net8.0/ZstdSharp.dll": {
             "assemblyVersion": "0.8.0.0",
             "fileVersion": "0.8.0.0"
+          }
+        }
+      },
+      "ZXing.Net/0.16.9": {
+        "runtime": {
+          "lib/net7.0/zxing.dll": {
+            "assemblyVersion": "0.16.9.0",
+            "fileVersion": "0.16.9.0"
+          }
+        }
+      },
+      "ZXing.Net.Bindings.Windows.Compatibility/0.16.12": {
+        "dependencies": {
+          "System.Drawing.Common": "9.0.1",
+          "ZXing.Net": "0.16.9"
+        },
+        "runtime": {
+          "lib/net7.0/ZXing.Windows.Compatibility.dll": {
+            "assemblyVersion": "0.16.12.0",
+            "fileVersion": "0.16.12.0"
           }
         }
       }
@@ -1616,6 +1679,13 @@
       "path": "microsoft.sqlserver.server/1.0.0",
       "hashPath": "microsoft.sqlserver.server.1.0.0.nupkg.sha512"
     },
+    "Microsoft.Win32.SystemEvents/9.0.1": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-OxjcwJqBW/5A1111+vL9d+5KYTvOzeCTJY9zHZ0kpQI4wX075p6L7inHPSYuf0MGakVjUvaShvw9e9pfbInU2Q==",
+      "path": "microsoft.win32.systemevents/9.0.1",
+      "hashPath": "microsoft.win32.systemevents.9.0.1.nupkg.sha512"
+    },
     "Mono.TextTemplating/3.0.0": {
       "type": "package",
       "serviceable": true,
@@ -1636,6 +1706,13 @@
       "sha512": "sha512-HrC5BXdl00IP9zeV+0Z848QWPAoCr9P3bDEZguI+gkLcBKAOxix/tLEAAHC+UvDNPv4a2d18lOReHMOagPa+zQ==",
       "path": "newtonsoft.json/13.0.3",
       "hashPath": "newtonsoft.json.13.0.3.nupkg.sha512"
+    },
+    "QRCoder/1.6.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-XmPA81eo+oRxBuyVdswsSkTGTE1d3thfF11Z1PdD7oB56A6HU4G4AAOdySmGRMb/cljwlFTMWUtosGEnwpS6GA==",
+      "path": "qrcoder/1.6.0",
+      "hashPath": "qrcoder.1.6.0.nupkg.sha512"
     },
     "Swashbuckle.AspNetCore/6.6.2": {
       "type": "package",
@@ -1755,6 +1832,13 @@
       "sha512": "sha512-fdYxcRjQqTTacKId/2IECojlDSFvp7LP5N78+0z/xH7v/Tuw5ZAxu23Y6PTCRinqyu2ePx+Gn1098NC6jM6d+A==",
       "path": "system.diagnostics.eventlog/8.0.0",
       "hashPath": "system.diagnostics.eventlog.8.0.0.nupkg.sha512"
+    },
+    "System.Drawing.Common/9.0.1": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-TTPkCqSMyMaG8BXlBKYTTJFtLV0SvjjsvgUN598hYgHaX/5B7tdUc2JhQF9vwrYmlzxId+gwFnKYuxQ2XsSz2g==",
+      "path": "system.drawing.common/9.0.1",
+      "hashPath": "system.drawing.common.9.0.1.nupkg.sha512"
     },
     "System.Formats.Asn1/9.0.0": {
       "type": "package",
@@ -1944,6 +2028,20 @@
       "sha512": "sha512-Z62eNBIu8E8YtbqlMy57tK3dV1+m2b9NhPeaYovB5exmLKvrGCqOhJTzrEUH5VyUWU6vwX3c1XHJGhW5HVs8dA==",
       "path": "zstdsharp.port/0.8.0",
       "hashPath": "zstdsharp.port.0.8.0.nupkg.sha512"
+    },
+    "ZXing.Net/0.16.9": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-7WaVMHklpT3Ye2ragqRIwlFRsb6kOk63BOGADV0fan3ulVfGLUYkDi5yNUsZS/7FVNkWbtHAlDLmu4WnHGfqvQ==",
+      "path": "zxing.net/0.16.9",
+      "hashPath": "zxing.net.0.16.9.nupkg.sha512"
+    },
+    "ZXing.Net.Bindings.Windows.Compatibility/0.16.12": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-bmwWQ4mOQEJOD0IkxSNZScU+kjMT1YliZPLIQtuh1LbxolKqJLcvyIY/9xv/2g3tNO3mZlcCIUOx756Xu3kE6w==",
+      "path": "zxing.net.bindings.windows.compatibility/0.16.12",
+      "hashPath": "zxing.net.bindings.windows.compatibility.0.16.12.nupkg.sha512"
     }
   }
 }

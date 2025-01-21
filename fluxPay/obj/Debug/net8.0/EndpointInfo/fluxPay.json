@@ -107,17 +107,17 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/WalletTransferRequestDto"
+                "$ref": "#/components/schemas/TransferToWalletRequestDto"
               }
             },
             "text/json": {
               "schema": {
-                "$ref": "#/components/schemas/WalletTransferRequestDto"
+                "$ref": "#/components/schemas/TransferToWalletRequestDto"
               }
             },
             "application/*+json": {
               "schema": {
-                "$ref": "#/components/schemas/WalletTransferRequestDto"
+                "$ref": "#/components/schemas/TransferToWalletRequestDto"
               }
             }
           }
@@ -291,27 +291,17 @@
         },
         "additionalProperties": false
       },
-      "VerifyPassportDto": {
+      "TransferToWalletRequestDto": {
         "type": "object",
         "properties": {
-          "passportNumber": {
-            "type": "string",
-            "nullable": true
+          "accountId": {
+            "type": "integer",
+            "format": "int64"
           },
-          "name": {
-            "type": "string",
-            "nullable": true
+          "destinationAccountId": {
+            "type": "integer",
+            "format": "int64"
           },
-          "dateOfBirth": {
-            "type": "string",
-            "nullable": true
-          }
-        },
-        "additionalProperties": false
-      },
-      "WalletTransferRequestDto": {
-        "type": "object",
-        "properties": {
           "locale": {
             "type": "string",
             "nullable": true
@@ -331,24 +321,22 @@
           "paymentTypeId": {
             "type": "integer",
             "format": "int32"
-          },
-          "accountNumber": {
+          }
+        },
+        "additionalProperties": false
+      },
+      "VerifyPassportDto": {
+        "type": "object",
+        "properties": {
+          "passportNumber": {
             "type": "string",
             "nullable": true
           },
-          "checkNumber": {
+          "name": {
             "type": "string",
             "nullable": true
           },
-          "routingCode": {
-            "type": "string",
-            "nullable": true
-          },
-          "receiptNumber": {
-            "type": "string",
-            "nullable": true
-          },
-          "bankNumber": {
+          "dateOfBirth": {
             "type": "string",
             "nullable": true
           }

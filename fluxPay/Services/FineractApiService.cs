@@ -164,6 +164,91 @@ namespace fluxPay.Services
             };
         }
 
+        public async Task CreditAsync(long accountId, TransferDto transferDto)
+        {
+            var requestUrl = $"fineract-provider/api/v1/savingsaccounts/{accountId}/transactions?command=deposit";
+            // Create the payload dynamically from parameters
+            var payload = new
+            {
+                locale = transferDto.Locale,
+                dateFormat = transferDto.DateFormat,
+                transactionDate = transferDto.TransactionDate,
+                transactionAmount = transferDto.TransactionAmount,
+                paymentTypeId = transferDto.PaymentTypeId,
+            };
+
+            // Serialize the payload to JSON
+            var jsonPayload = System.Text.Json.JsonSerializer.Serialize(payload);
+            var content = new StringContent(jsonPayload, Encoding.UTF8, "application/json");
+
+            // Make the POST request
+            var response = await _fineractClient._client.PostAsync(requestUrl, content);
+
+            if (response.IsSuccessStatusCode)
+            {
+                Console.WriteLine("Debit successful");
+            }
+            else
+            {
+                var errorContent = await response.Content.ReadAsStringAsync();
+                throw new HttpRequestException($"Error debiting account: {response.StatusCode}, {errorContent}");
+            }
+        }
+
+        public async Task DebitAsync(long accountId, TransferDto transferDto)
+        {
+            var requestUrl = $"fineract-provider/api/v1/savingsaccounts/{accountId}/transactions?command=withdrawal";
+            // Create the payload dynamically from parameters
+            var payload = new
+            {
+                locale = transferDto.Locale,
+                dateFormat = transferDto.DateFormat,
+                transactionDate = transferDto.TransactionDate,
+                transactionAmount = transferDto.TransactionAmount,
+                paymentTypeId = transferDto.PaymentTypeId,
+            };
+
+            // Serialize the payload to JSON
+            var jsonPayload = System.Text.Json.JsonSerializer.Serialize(payload);
+            var content = new StringContent(jsonPayload, Encoding.UTF8, "application/json");
+
+            // Make the POST request
+            var response = await _fineractClient._client.PostAsync(requestUrl, content);
+
+            if (response.IsSuccessStatusCode)
+            {
+                Console.WriteLine("Debit successful");
+            }
+            else
+            {
+                var errorContent = await response.Content.ReadAsStringAsync();
+                throw new HttpRequestException($"Error debiting account: {response.StatusCode}, {errorContent}");
+            }
+        }
+
+        public async Task<SavingsAccountResponseDto> GetAgentWalletAsync(long AccountId)
+        {
+            var requestUri = $"/fineract-provider/api/v1/savingsaccounts/{AccountId}";
+            var response = await _fineractClient._client.GetAsync(requestUri);
+            if (response.IsSuccessStatusCode)
+            {
+                var successContent = await response.Content.ReadAsStringAsync();
+
+                var accountDetails = JsonConvert.DeserializeObject<SavingsAccountDetailsDto>(successContent);
+                return new SavingsAccountResponseDto
+                {
+                    AccountNumber = accountDetails.accountNo,
+                    Balance = accountDetails.Summary.AccountBalance,
+                    AccountType = accountDetails.DepositType.Value
+                };
+            }
+            else
+            {
+                var errorContent = response.Content.ReadAsStringAsync();
+                throw new HttpRequestException($"Error retrieving agent wallet: {response.StatusCode}, {errorContent}");
+            }
+        }
+
         public async Task<FineractApiResponse> GetClientAsync(int clientId)
         {
             var requestUri = $"/fineract-provider/api/v1/clients/{clientId}";
@@ -188,6 +273,11 @@ namespace fluxPay.Services
                 var errorContent = await response.Content.ReadAsStringAsync();
                 throw new HttpRequestException($"Error retrieving client: {response.StatusCode}, {errorContent}");
             }
+        }
+
+        public Task<SavingsAccountResponseDto> GetCustomerWalletAsync(Guid customerId)
+        {
+            throw new NotImplementedException();
         }
 
         public async Task<OtpConfigDto> GetOtpConfigure()
@@ -332,6 +422,16 @@ public class PrefixTypeDto
 }
 
 
+
+public class TransferDto
+{
+    public decimal TransactionAmount { get; set; }
+    public string AccountNumber { get; set; }
+    public int PaymentTypeId { get; set; }
+    public string Locale { get; set; } = "en"; // Default value
+    public string DateFormat { get; set; } = "dd MMMM yyyy"; // Default value
+    public string TransactionDate { get; set; } = DateTime.Now.ToString("dd MMMM yyyy"); // Default to current date
+}
 
 
 

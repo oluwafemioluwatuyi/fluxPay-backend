@@ -39,6 +39,7 @@ builder.Services.AddScoped<IConstants, Constants>();
 
 builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<IWalletTransfer, WalletTransfer>();
+builder.Services.AddScoped<IWalletTransferService, WalletTransferService>();
 
 builder.Services.AddScoped<ITempUserRepository, TempUserRepository>();
 builder.Services.AddScoped<OtpService>();

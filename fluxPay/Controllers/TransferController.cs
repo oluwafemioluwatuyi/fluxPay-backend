@@ -10,37 +10,25 @@ namespace FluxPay.Controllers
     [Route("api/[controller]")]
     public class TransferController : ControllerBase
     {
-        private readonly IWalletTransfer _walletTransfer;
+        private readonly IWalletTransferService _walletTransferService;
         private readonly ILogger<TransferController> _logger;
 
-        public TransferController(IWalletTransfer walletTransfer, ILogger<TransferController> logger)
+        public TransferController(IWalletTransferService walletTransferService, ILogger<TransferController> logger)
         {
-            _walletTransfer = walletTransfer;
+            _walletTransferService = walletTransferService;
             _logger = logger;
         }
 
         [HttpPost("wallet-transfer")]
-        public async Task<IActionResult> ExecuteWalletTransfer([FromBody] WalletTransferRequestDto transferRequest)
+        public async Task<IActionResult> WalletTransfer([FromBody] TransferToWalletRequestDto transferToWalletRequestDto)
         {
-            if (transferRequest == null)
+            var response = await _walletTransferService.TransferToWallet(transferToWalletRequestDto);
+            if (response is null)
             {
-                _logger.LogError("Received null transfer request");
-                return BadRequest("Transfer request cannot be null");
+                return NotFound();
             }
-
-            _logger.LogInformation("Executing wallet transfer from {SourceWalletId} to {DestinationWalletId} of amount {Amount}",
-                transferRequest.accountNumber, transferRequest.bankNumber, transferRequest.accountNumber);
-            var payload = new WebhookEventPayload();
-
-            var response = await _walletTransfer.ExecuteWalletTransfer(transferRequest, payload);
-
-            if (response != null)
             {
                 return Ok(response);
-            }
-            else
-            {
-                return StatusCode(500, response);
             }
         }
     }
